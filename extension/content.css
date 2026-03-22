@@ -1,0 +1,151 @@
+#visual-spider-panel {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  width: 320px;
+  max-height: 90vh;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  z-index: 99999;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 13px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.vsp-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-weight: 600;
+}
+
+.vsp-close {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.vsp-content {
+  padding: 12px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.vsp-section {
+  margin-bottom: 16px;
+}
+
+.vsp-section h4 {
+  margin: 0 0 8px 0;
+  color: #333;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.vsp-btn {
+  display: inline-block;
+  padding: 6px 12px;
+  margin: 2px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: white;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+.vsp-btn:hover {
+  background: #f5f5f5;
+  border-color: #667eea;
+}
+
+.vsp-btn-primary {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
+}
+
+.vsp-btn-primary:hover {
+  background: #5568d3;
+}
+
+.vsp-btn-success {
+  background: #67c23a;
+  color: white;
+  border-color: #67c23a;
+}
+
+.vsp-btn-success:hover {
+  background: #5daf34;
+}
+
+.vsp-info {
+  background: #f5f5f5;
+  padding: 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  color: #666;
+}
+
+.vsp-info p {
+  margin: 4px 0;
+}
+
+#vsp-export-format {
+  width: calc(100% - 4px);
+  padding: 6px;
+  margin-bottom: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+#vsp-selector-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 99998;
+  pointer-events: none;
+}
+
+.vsp-results-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.vsp-results-header h4 {
+  margin: 0;
+}
+
+.vsp-count {
+  background: #667eea;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+}
+
+#vsp-results pre {
+  background: #f5f5f5;
+  padding: 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  max-height: 300px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
