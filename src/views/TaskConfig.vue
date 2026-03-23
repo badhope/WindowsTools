@@ -242,6 +242,7 @@ import { ref, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Search, Delete, Plus, VideoPlay, VideoPause, SwitchButton, DocumentChecked, Download, Refresh, MagicStick, Picture } from '@element-plus/icons-vue'
 import { useTaskStore } from '@/stores/taskStore'
+import api from '@/services/api'
 import { detectPageStructure, extractFields, findNextPage } from '@/utils/crawler'
 import { exportToCSV, exportToJSON, exportToHTMLTable, exportToExcel, exportToPDF, exportToMarkdown } from '@/utils/export'
 import { downloadScreenshot } from '@/utils/screenshot'
@@ -319,18 +320,43 @@ async function handleAutoDetect() {
 }
 
 async function fetchPageHtml(): Promise<string> {
+  const serverUrl = api.getServerUrl()
+  if (serverUrl && serverUrl !== 'http://localhost:3000') {
+    api.setServerUrl('http://localhost:3000')
+  }
+
+  const health = await api.checkHealth()
+  if (!health) {
+    throw new Error('后端服务未启动，请先启动后端服务')
+  }
+
   try {
-    const response = await fetch(urlInput.value, {
-      method: method.value,
-      headers: crawlConfig.value.headers as Record<string, string>
+    const result = await api.crawl({
+      url: urlInput.value,
+      method: method.value as 'GET' | 'POST',
+      headers: crawlConfig.value.headers as Record<string, string>,
+      useBrowser: true,
+      timeout: crawlConfig.value.timeout,
+      proxy: crawlConfig.value.proxy || undefined,
+      selectors: fields.value.map(f => ({
+        name: f.name,
+        selector: f.selector,
+        type: f.selectorType as 'css' | 'xpath' | 'regex',
+        attribute: f.attribute as 'text' | 'href' | 'src' | 'html'
+      }))
     })
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`)
+
+    if (result.success) {
+      pageHtml.value = JSON.stringify(result.data, null, 2)
+      previewData.value = result.data ? [result.data] : []
+      previewColumns.value = result.data ? Object.keys(result.data) : []
+      hasPreview.value = true
+      return pageHtml.value
+    } else {
+      throw new Error('爬取失败')
     }
-    pageHtml.value = await response.text()
-    return pageHtml.value
-  } catch (e) {
-    throw new Error('获取页面失败: ' + String(e))
+  } catch (e: any) {
+    throw new Error('获取页面失败: ' + e.message)
   }
 }
 

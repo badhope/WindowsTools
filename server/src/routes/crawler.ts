@@ -33,6 +33,19 @@ interface CrawlRequest {
   proxy?: string
 }
 
+const ANTI_DETECT_USER_AGENTS = [
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0',
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15',
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0'
+]
+
+function getRandomUserAgent(): string {
+  return ANTI_DETECT_USER_AGENTS[Math.floor(Math.random() * ANTI_DETECT_USER_AGENTS.length)]
+}
+
 async function getBrowser(): Promise<Browser> {
   if (!browser || !browser.connected) {
     browser = await puppeteer.launch({
@@ -45,11 +58,36 @@ async function getBrowser(): Promise<Browser> {
         '--disable-gpu',
         '--window-size=1920x1080',
         '--disable-web-security',
-        '--disable-features=VizDisplayCompositor'
+        '--disable-features=VizDisplayCompositor',
+        '--disable-blink-features=AutomationControlled',
+        '--disable-infobars',
+        '--disable-notifications',
+        '--disable-extensions',
+        '--disable-background-networking',
+        '--disable-default-apps',
+        '--disable-hang-monitor',
+        '--disable-popup-blocking',
+        '--disable-prompt-on-repost',
+        '--disable-sync',
+        '--disable-translate',
+        '--metrics-recording-mode=disable',
+        '--no-first-run',
+        '--safebrowsing-disable-auto-update',
+        '--ignore-certificate-errors',
+        '--ignore-ssl-errors'
       ]
     })
   }
   return browser
+}
+
+function applyStealthMode(page: Page): void {
+  page.evaluateOnNewDocument(() => {
+    Object.defineProperty(navigator, 'webdriver', { get: () => false })
+    Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3, 4, 5] })
+    Object.defineProperty(navigator, 'languages', { get: () => ['zh-CN', 'zh', 'en-US', 'en'] })
+    ;(window as any).chrome = { runtime: {} }
+  })
 }
 
 CrawlerRouter.post('/crawl', async (req, res) => {
@@ -111,6 +149,8 @@ async function crawlWithBrowser(config: CrawlRequest, task: any): Promise<any> {
   const page: Page = await browser.newPage()
 
   try {
+    applyStealthMode(page)
+
     if (config.proxy) {
       await page.authenticate({ username: '', password: '' }).catch(() => {})
     }
@@ -119,9 +159,24 @@ async function crawlWithBrowser(config: CrawlRequest, task: any): Promise<any> {
       await page.setExtraHTTPHeaders(config.headers)
     }
 
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
+    await page.setUserAgent(getRandomUserAgent())
+
+    await page.evaluate(() => {
+      Object.defineProperty(navigator, 'platform', { get: () => 'Win32' })
+      Object.defineProperty(navigator, 'oscpu', { get: () => 'Windows NT 10.0' })
+    })
 
     task.progress = 20
+
+    await page.setRequestInterception(true)
+    page.on('request', (req) => {
+      const resourceType = req.resourceType()
+      if (['image', 'stylesheet', 'font', 'media'].includes(resourceType)) {
+        req.abort()
+      } else {
+        req.continue()
+      }
+    })
 
     const navigationPromise = config.waitForSelector
       ? page.waitForSelector(config.waitForSelector, { timeout: config.timeout || 30000 })
@@ -129,9 +184,7 @@ async function crawlWithBrowser(config: CrawlRequest, task: any): Promise<any> {
 
     await navigationPromise
 
-    task.progress = 50
-
-    await page.waitForTimeout(1000)
+    await page.waitForTimeout(2000)
 
     const html = await page.content()
     const $ = cheerio.load(html)
