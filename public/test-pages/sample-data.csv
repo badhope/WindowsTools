@@ -1,0 +1,102 @@
+[
+  {
+    "title": "Apple iPhone 15 Pro 256GB 钛金属设计",
+    "price": "¥7999",
+    "originalPrice": "¥8999",
+    "sales": "月销1.2万+",
+    "shop": "Apple官方旗舰店",
+    "tags": "正品保障,免息分期",
+    "rating": "4.9分",
+    "shipping": "免运费"
+  },
+  {
+    "title": "华为 P60 Pro 超聚光夜视长焦 昆仑玻璃",
+    "price": "¥5988",
+    "originalPrice": "¥6988",
+    "sales": "月销6000+",
+    "shop": "华为官方旗舰店",
+    "tags": "国产精品,摄影旗舰",
+    "rating": "4.7分",
+    "shipping": "免运费"
+  },
+  {
+    "title": "小米14 骁龙8Gen3处理器 徕卡光学镜头",
+    "price": "¥3999",
+    "originalPrice": "¥4599",
+    "sales": "月销2.5万+",
+    "shop": "小米官方旗舰店",
+    "tags": "性价比之王,骁龙8Gen3",
+    "rating": "4.9分",
+    "shipping": "免运费"
+  },
+  {
+    "title": "索尼 PS5 PlayStation5 游戏机 国行版",
+    "price": "¥3999",
+    "originalPrice": "¥4499",
+    "sales": "月销5000+",
+    "shop": "索尼官方旗舰店",
+    "tags": "游戏利器,次世代主机",
+    "rating": "4.8分",
+    "shipping": "免运费"
+  },
+  {
+    "title": "任天堂 Nintendo Switch OLED版",
+    "price": "¥2599",
+    "originalPrice": "¥2999",
+    "sales": "月销1.8万+",
+    "shop": "任天堂旗舰店",
+    "tags": "任天堂,限定版",
+    "rating": "4.9分",
+    "shipping": "免运费"
+  },
+  {
+    "title": "Apple AirPods Pro (第二代)",
+    "price": "¥1799",
+    "originalPrice": "¥1999",
+    "sales": "月销3.5万+",
+    "shop": "Apple官方旗舰店",
+    "tags": "主动降噪,空间音频",
+    "rating": "4.8分",
+    "shipping": "免运费"
+  },
+  {
+    "title": "Apple iPad Pro 12.9英寸 M2芯片",
+    "price": "¥9299",
+    "originalPrice": "¥10299",
+    "sales": "月销4500+",
+    "shop": "Apple官方旗舰店",
+    "tags": "M2芯片,Liquid视网膜XDR",
+    "rating": "4.9分",
+    "shipping": "免运费"
+  },
+  {
+    "title": "戴森 Dyson V15 无线吸尘器",
+    "price": "¥5499",
+    "originalPrice": "¥6499",
+    "sales": "月销3200+",
+    "shop": "戴森官方旗舰店",
+    "tags": "强劲吸力,激光探测",
+    "rating": "4.8分",
+    "shipping": "免运费"
+  },
+  {
+    "title": "美的 变频空调 1.5匹",
+    "price": "¥2299",
+    "originalPrice": "¥2999",
+    "sales": "月销8000+",
+    "shop": "美的官方旗舰店",
+    "tags": "节能省电,智能控制",
+    "rating": "4.7分",
+    "shipping": "免运费"
+  },
+  {
+    "title": "海尔 冰箱 对开门 变频节能",
+    "price": "¥3999",
+    "originalPrice": "¥4999",
+    "sales": "月销1500+",
+    "shop": "海尔官方旗舰店",
+    "tags": "大容量,变频静音",
+    "rating": "4.6分",
+    "shipping": "免运费"
+  }
+]

@@ -3,16 +3,16 @@
     <el-card class="url-input-card">
       <template #header>
         <div class="card-header">
-          <span>步骤 1: 输入目标网址</span>
+          <span>{{ $t('task.step1') }}</span>
           <el-button type="primary" link @click="handleAutoDetect" :loading="detecting">
             <el-icon><MagicStick /></el-icon>
-            自动检测
+            {{ $t('task.autoDetect') }}
           </el-button>
         </div>
       </template>
       <el-input
         v-model="urlInput"
-        placeholder="请输入目标网址，如: https://example.com/jobs"
+        :placeholder="$t('task.urlPlaceholder')"
         size="large"
         clearable
         @keyup.enter="handleFetchPreview"
@@ -28,8 +28,8 @@
         </template>
       </el-input>
       <div class="url-tips">
-        <el-tag size="small" type="info">支持单URL抓取</el-tag>
-        <el-tag size="small" type="info">支持批量导入(.txt)</el-tag>
+        <el-tag size="small" type="info">{{ $t('task.singleUrlTip') }}</el-tag>
+        <el-tag size="small" type="info">{{ $t('task.batchImportTip') }}</el-tag>
       </div>
     </el-card>
 
@@ -38,31 +38,31 @@
         <el-card class="rules-card">
           <template #header>
             <div class="card-header">
-              <span>步骤 2: 配置爬取规则</span>
+              <span>{{ $t('task.step2') }}</span>
             </div>
           </template>
           <el-tabs v-model="activeTab">
-            <el-tab-pane label="字段配置" name="fields">
+            <el-tab-pane :label="$t('task.fieldConfig')" name="fields">
               <div class="fields-panel">
                 <div class="field-list">
-                  <el-empty v-if="fields.length === 0" description="暂无字段，请点击下方按钮添加或使用自动检测" />
+                  <el-empty v-if="fields.length === 0" :description="$t('task.noFields')" />
                   <div v-for="(field, index) in fields" :key="field.id" class="field-item">
-                    <el-input v-model="field.name" placeholder="字段名称" style="width: 120px" />
+                    <el-input v-model="field.name" :placeholder="$t('task.fieldName')" style="width: 120px" />
                     <el-select v-model="field.selectorType" style="width: 100px" @change="field.selector = ''">
                       <el-option label="CSS" value="css" />
                       <el-option label="XPath" value="xpath" />
-                      <el-option label="正则" value="regex" />
+                      <el-option label="Regex" value="regex" />
                     </el-select>
                     <el-input
                       v-model="field.selector"
-                      placeholder="选择器表达式"
+                      :placeholder="$t('task.selectorPlaceholder')"
                       style="flex: 1"
                     />
                     <el-select v-model="field.attribute" style="width: 100px">
-                      <el-option label="文本" value="text" />
-                      <el-option label="链接" value="href" />
-                      <el-option label="图片" value="src" />
-                      <el-option label="HTML" value="html" />
+                      <el-option :label="$t('task.attrText')" value="text" />
+                      <el-option :label="$t('task.attrHref')" value="href" />
+                      <el-option :label="$t('task.attrSrc')" value="src" />
+                      <el-option :label="$t('task.attrHtml')" value="html" />
                     </el-select>
                     <el-button type="danger" :icon="Delete" @click="removeField(index)" />
                   </div>
@@ -70,54 +70,54 @@
                 <div class="field-actions">
                   <el-button type="primary" @click="addField">
                     <el-icon><Plus /></el-icon>
-                    添加字段
+                    {{ $t('common.add') }}
                   </el-button>
                   <el-button type="success" @click="handleTestExtract">
                     <el-icon><VideoPlay /></el-icon>
-                    测试提取
+                    {{ $t('task.testExtract') }}
                   </el-button>
                 </div>
               </div>
             </el-tab-pane>
-            <el-tab-pane label="分页配置" name="pagination">
+            <el-tab-pane :label="$t('task.pagination')" name="pagination">
               <div class="pagination-panel">
                 <el-form label-width="100px">
-                  <el-form-item label="启用分页">
+                  <el-form-item :label="$t('task.paginationEnabled')">
                     <el-switch v-model="pagination.enabled" />
                   </el-form-item>
-                  <el-form-item label="下一页选择器" v-if="pagination.enabled">
-                    <el-input v-model="pagination.selector" placeholder="如: a.next_page" />
+                  <el-form-item :label="$t('task.paginationSelector')" v-if="pagination.enabled">
+                    <el-input v-model="pagination.selector" placeholder="a.next_page" />
                   </el-form-item>
-                  <el-form-item label="选择器类型" v-if="pagination.enabled">
+                  <el-form-item :label="$t('task.selectorType')" v-if="pagination.enabled">
                     <el-radio-group v-model="pagination.selectorType">
                       <el-radio label="css">CSS</el-radio>
                       <el-radio label="xpath">XPath</el-radio>
                     </el-radio-group>
                   </el-form-item>
-                  <el-form-item label="最大页数" v-if="pagination.enabled">
+                  <el-form-item :label="$t('task.maxPages')" v-if="pagination.enabled">
                     <el-input-number v-model="pagination.maxPages" :min="1" :max="1000" />
                   </el-form-item>
                 </el-form>
               </div>
             </el-tab-pane>
-            <el-tab-pane label="高级配置" name="advanced">
+            <el-tab-pane :label="$t('task.advanced')" name="advanced">
               <div class="advanced-panel">
                 <el-form label-width="120px" size="default">
-                  <el-form-item label="请求超时">
+                  <el-form-item :label="$t('task.timeout')">
                     <el-input-number v-model="crawlConfig.timeout" :min="5000" :max="120000" :step="5000" />
-                    <span class="form-tip">毫秒</span>
+                    <span class="form-tip">ms</span>
                   </el-form-item>
-                  <el-form-item label="最大重试次数">
+                  <el-form-item :label="$t('task.maxRetries')">
                     <el-input-number v-model="crawlConfig.maxRetries" :min="0" :max="10" />
                   </el-form-item>
-                  <el-form-item label="请求延迟">
+                  <el-form-item :label="$t('task.delay')">
                     <el-input-number v-model="crawlConfig.delay[0]" :min="0" :max="60" />
                     <span class="form-tip">-</span>
                     <el-input-number v-model="crawlConfig.delay[1]" :min="0" :max="60" />
-                    <span class="form-tip">秒</span>
+                    <span class="form-tip">s</span>
                   </el-form-item>
-                  <el-form-item label="代理服务器">
-                    <el-input v-model="crawlConfig.proxy" placeholder="如: http://127.0.0.1:7890" clearable />
+                  <el-form-item :label="$t('task.proxy')">
+                    <el-input v-model="crawlConfig.proxy" placeholder="http://127.0.0.1:7890" clearable />
                   </el-form-item>
                 </el-form>
               </div>
@@ -129,15 +129,15 @@
         <el-card class="preview-card">
           <template #header>
             <div class="card-header">
-              <span>步骤 3: 预览结果</span>
+              <span>{{ $t('task.step3') }}</span>
               <el-button type="text" @click="handleRefreshPreview">
                 <el-icon><Refresh /></el-icon>
-                刷新
+                {{ $t('common.refresh') }}
               </el-button>
             </div>
           </template>
           <div class="preview-content">
-            <el-empty v-if="!hasPreview" description="请先输入网址并点击获取预览" />
+            <el-empty v-if="!hasPreview" :description="$t('task.noPreview')" />
             <div v-else class="preview-table-container">
               <el-table :data="previewData" stripe max-height="400" size="small">
                 <el-table-column
@@ -150,7 +150,7 @@
                 />
               </el-table>
               <div class="preview-stats">
-                共 {{ previewData.length }} 条数据
+                {{ $t('task.recordCount', { count: previewData.length }) }}
               </div>
             </div>
           </div>
@@ -161,39 +161,39 @@
     <el-card class="action-card">
       <template #header>
         <div class="card-header">
-          <span>步骤 4: 执行抓取</span>
+          <span>{{ $t('task.step4') }}</span>
         </div>
       </template>
       <div class="action-bar">
         <div class="action-left">
-          <el-input v-model="taskName" placeholder="任务名称" style="width: 200px">
-            <template #prepend>任务名</template>
+          <el-input v-model="taskName" :placeholder="$t('task.taskNamePlaceholder')" style="width: 200px">
+            <template #prepend>{{ $t('task.taskName') }}</template>
           </el-input>
           <el-button type="success" size="large" @click="handleStartCrawl" :disabled="!canStartCrawl">
             <el-icon><VideoPlay /></el-icon>
-            开始抓取
+            {{ $t('task.start') }}
           </el-button>
           <el-button size="large" @click="handlePauseCrawl" :disabled="crawlStatus !== 'running'">
             <el-icon><VideoPause /></el-icon>
-            暂停
+            {{ $t('task.pause') }}
           </el-button>
           <el-button size="large" @click="handleStopCrawl" :disabled="crawlStatus === 'idle'">
             <el-icon><SwitchButton /></el-icon>
-            停止
+            {{ $t('task.stop') }}
           </el-button>
         </div>
         <div class="action-right">
           <el-button type="primary" @click="handleSaveTask" :disabled="!taskName">
             <el-icon><DocumentChecked /></el-icon>
-            保存任务
+            {{ $t('common.save') }}
           </el-button>
           <el-button @click="handleExport" :disabled="!hasResults">
             <el-icon><Download /></el-icon>
-            导出数据
+            {{ $t('common.export') }}
           </el-button>
           <el-button @click="handleScreenshot" :disabled="!hasPreview">
             <el-icon><Picture /></el-icon>
-            截图
+            {{ $t('nav.screenshot') }}
           </el-button>
         </div>
       </div>
@@ -213,9 +213,9 @@
       </div>
     </el-card>
 
-    <el-dialog v-model="exportDialogVisible" title="导出数据" width="400px">
+    <el-dialog v-model="exportDialogVisible" :title="$t('task.exportData')" width="400px">
       <el-form label-width="80px">
-        <el-form-item label="导出格式">
+        <el-form-item :label="$t('task.exportFormat')">
           <el-select v-model="exportFormat" style="width: 100%">
             <el-option label="CSV" value="csv" />
             <el-option label="JSON" value="json" />
@@ -225,13 +225,13 @@
             <el-option label="Markdown" value="md" />
           </el-select>
         </el-form-item>
-        <el-form-item label="文件名">
-          <el-input v-model="exportFileName" placeholder="请输入文件名" />
+        <el-form-item :label="$t('task.fileName')">
+          <el-input v-model="exportFileName" :placeholder="$t('task.fileNamePlaceholder')" />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="exportDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="confirmExport">导出</el-button>
+        <el-button @click="exportDialogVisible = false">{{ $t('common.cancel') }}</el-button>
+        <el-button type="primary" @click="confirmExport">{{ $t('common.export') }}</el-button>
       </template>
     </el-dialog>
   </div>

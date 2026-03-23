@@ -1,8 +1,88 @@
-node_modules
-dist
-.DS_Store
-*.log
-.env
-.vscode
-.idea
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+dist-ssr/
 *.local
+.vite/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Environment files
+.env
+.env.local
+.env.production
+.env.production.local
+.env.example
+
+# IDE
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.code-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Temporary files
+tmp/
+temp/
+.cache/
+*.tmp
+*.temp
+
+# Security
+*.pem
+*.key
+*.jks
+*.p12
+*.pfx
+security/
+secrets/
+keys/
+
+# Build artifacts
+*.tgz
+*.tar.gz
+*.zip
+
+# Puppeteer
+.puppeteer/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Optional stylelint cache
+.stylelintcache
+
+# Screenshot outputs
+screenshots/
+
+# Uploaded files
+uploads/
+data/

@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VisualSpider 测试页面 - 商品列表</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Microsoft YaHei', Arial, sans-serif; background: #f5f5f5; }
+        .header { background: #ff6600; color: white; padding: 20px; text-align: center; }
+        .header h1 { font-size: 28px; margin-bottom: 10px; }
+        .header p { font-size: 14px; opacity: 0.9; }
+        .container { max-width: 1200px; margin: 20px auto; padding: 0 20px; }
+        .filters { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .filters h3 { margin-bottom: 15px; color: #333; }
+        .filter-row { display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 10px; }
+        .filter-item { display: flex; align-items: center; gap: 8px; }
+        .filter-item label { color: #666; font-size: 14px; }
+        .product-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .product-card { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; }
+        .product-card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
+        .product-image { width: 100%; height: 220px; object-fit: cover; background: #eee; }
+        .product-info { padding: 15px; }
+        .product-title { font-size: 16px; color: #333; margin-bottom: 10px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .product-price { color: #ff6600; font-size: 22px; font-weight: bold; margin-bottom: 10px; }
+        .product-price .original { color: #999; font-size: 14px; text-decoration: line-through; margin-left: 10px; font-weight: normal; }
+        .product-meta { display: flex; justify-content: space-between; color: #999; font-size: 12px; }
+        .product-sales { color: #ff6600; }
+        .shop-info { display: flex; align-items: center; gap: 10px; padding: 10px 15px; border-top: 1px solid #f0f0f0; }
+        .shop-avatar { width: 30px; height: 30px; border-radius: 50%; background: #ff6600; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; }
+        .shop-name { color: #666; font-size: 13px; flex: 1; }
+        .pagination { display: flex; justify-content: center; gap: 10px; margin: 30px 0; }
+        .pagination button { padding: 8px 16px; border: 1px solid #ddd; background: white; border-radius: 4px; cursor: pointer; transition: all 0.2s; }
+        .pagination button:hover { background: #ff6600; color: white; border-color: #ff6600; }
+        .pagination button.active { background: #ff6600; color: white; border-color: #ff6600; }
+        .pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .footer { background: #fff; padding: 30px; text-align: center; color: #999; border-top: 1px solid #eee; margin-top: 50px; }
+        .tags { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+        .tag { background: #fff0e6; color: #ff6600; padding: 2px 8px; border-radius: 4px; font-size: 11px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🛒 淘宝商品测试平台</h1>
+        <p>VisualSpider 爬虫功能测试页面 - 模拟电商网站</p>
+    </div>
+
+    <div class="container">
+        <div class="filters">
+            <h3>🔍 筛选条件</h3>
+            <div class="filter-row">
+                <div class="filter-item">
+                    <label>商品类目：</label>
+                    <select id="category" style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px;">
+                        <option value="">全部</option>
+                        <option value="electronics">数码电子</option>
+                        <option value="clothing">服装鞋帽</option>
+                        <option value="food">食品生鲜</option>
+                        <option value="home">家居用品</option>
+                    </select>
+                </div>
+                <div class="filter-item">
+                    <label>价格区间：</label>
+                    <input type="number" placeholder="最低价" style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; width: 80px;">
+                    <span>-</span>
+                    <input type="number" placeholder="最高价" style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; width: 80px;">
+                </div>
+                <div class="filter-item">
+                    <label>销量：</label>
+                    <select style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px;">
+                        <option>默认排序</option>
+                        <option>销量从高到低</option>
+                        <option>价格从低到高</option>
+                        <option>价格从高到低</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="product-list" id="productList">
+            <div class="product-card" data-product-id="1001">
+                <img src="https://via.placeholder.com/400x400/ff6600/ffffff?text=iPhone+15" alt="iPhone 15 Pro" class="product-image">
+                <div class="product-info">
+                    <h4 class="product-title">Apple iPhone 15 Pro 256GB 钛金属设计 A17 Pro芯片 支持移动联通电信5G</h4>
+                    <div class="tags">
+                        <span class="tag">正品保障</span>
+                        <span class="tag">免息分期</span>
+                    </div>
+                    <div class="product-price">¥7999<span class="original">¥8999</span></div>
+                    <div class="product-meta">
+                        <span class="product-sales">月销 1.2万+</span>
+                        <span>收藏 3.5万</span>
+                    </div>
+                </div>
+                <div class="shop-info">
+                    <div class="shop-avatar">Apple</div>
+                    <span class="shop-name">Apple官方旗舰店</span>
+                    <span style="color: #ff6600;">›</span>
+                </div>
+            </div>
+
+            <div class="product-card" data-product-id="1002">
+                <img src="https://via.placeholder.com/400x400/1a1a1a/ffffff?text=MacBook+Pro" alt="MacBook Pro" class="product-image">
+                <div class="product-info">
+                    <h4 class="product-title">Apple MacBook Pro 14英寸 M3 Pro芯片 18G+512G 深空黑 笔记本电脑</h4>
+                    <div class="tags">
+                        <span class="tag">官方正品</span>
+                        <span class="tag">极速发货</span>
+                    </div>
+                    <div class="product-price">¥16999<span class="original">¥18999</span></div>
+                    <div class="product-meta">
+                        <span class="product-sales">月销 8000+</span>
+                        <span>收藏 2.1万</span>
+                    </div>
+                </div>
+                <div class="shop-info">
+                    <div class="shop-avatar">Apple</div>
+                    <span class="shop-name">Apple官方旗舰店</span>
+                    <span style="color: #ff6600;">›</span>
+                </div>
+            </div>
+
+            <div class="product-card" data-product-id="1003">
+                <img src="https://via.placeholder.com/400x400/0066cc/ffffff?text=HUAWEI+P60" alt="华为P60" class="product-image">
+                <div class="product-info">
+                    <h4 class="product-title">华为 P60 Pro 超聚光夜视长焦 昆仑玻璃 双向北斗卫星消息 旗舰手机</h4>
+                    <div class="tags">
+                        <span class="tag">国产精品</span>
+                        <span class="tag">摄影旗舰</span>
+                    </div>
+                    <div class="product-price">¥5988<span class="original">¥6988</span></div>
+                    <div class="product-meta">
+                        <span class="product-sales">月销 6000+</span>
+                        <span>收藏 1.8万</span>
+                    </div>
+                </div>
+                <div class="shop-info">
+                    <div class="shop-avatar" style="background: #cf0a2c;">华为</div>
+                    <span class="shop-name">华为官方旗舰店</span>
+                    <span style="color: #ff6600;">›</span>
+                </div>
+            </div>
+
+            <div class="product-card" data-product-id="1004">
+                <img src="https://via.placeholder.com/400x400/00cc66/ffffff?text=小米14" alt="小米14" class="product-image">
+                <div class="product-info">
+                    <h4 class="product-title">小米14 骁龙8Gen3处理器 徕卡光学镜头 光影猎人900 澎湃OS 5G手机</h4>
+                    <div class="tags">
+                        <span class="tag">性价比之王</span>
+                        <span class="tag">骁龙8Gen3</span>
+                    </div>
+                    <div class="product-price">¥3999<span class="original">¥4599</span></div>
+                    <div class="product-meta">
+                        <span class="product-sales">月销 2.5万+</span>
+                        <span>收藏 5.6万</span>
+                    </div>
+                </div>
+                <div class="shop-info">
+                    <div class="shop-avatar" style="background: #ff6900;">小米</div>
+                    <span class="shop-name">小米官方旗舰店</span>
+                    <span style="color: #ff6600;">›</span>
+                </div>
+            </div>
+
+            <div class="product-card" data-product-id="1005">
+                <img src="https://via.placeholder.com/400x400/9900ff/ffffff?text=PS5" alt="PlayStation 5" class="product-image">
+                <div class="product-info">
+                    <h4 class="product-title">索尼 PS5 PlayStation5 游戏机 国行版 光驱版 次世代游戏主机 限量版</h4>
+                    <div class="tags">
+                        <span class="tag">游戏利器</span>
+                        <span class="tag">次世代主机</span>
+                    </div>
+                    <div class="product-price">¥3999<span class="original">¥4499</span></div>
+                    <div class="product-meta">
+                        <span class="product-sales">月销 5000+</span>
+                        <span>收藏 4.2万</span>
+                    </div>
+                </div>
+                <div class="shop-info">
+                    <div class="shop-avatar" style="background: #003087;">索尼</div>
+                    <span class="shop-name">索尼官方旗舰店</span>
+                    <span style="color: #ff6600;">›</span>
+                </div>
+            </div>
+
+            <div class="product-card" data-product-id="1006">
+                <img src="https://via.placeholder.com/400x400/cc0000/ffffff?text=Switch" alt="Switch" class="product-image">
+                <div class="product-info">
+                    <h4 class="product-title">任天堂 Nintendo Switch OLED版 精灵宝可梦朱紫限定机 游戏机 便携主机</h4>
+                    <div class="tags">
+                        <span class="tag">任天堂</span>
+                        <span class="tag">限定版</span>
+                    </div>
+                    <div class="product-price">¥2599<span class="original">¥2999</span></div>
+                    <div class="product-meta">
+                        <span class="product-sales">月销 1.8万+</span>
+                        <span>收藏 6.3万</span>
+                    </div>
+                </div>
+                <div class="shop-info">
+                    <div class="shop-avatar" style="background: #e60012;">任</div>
+                    <span class="shop-name">任天堂旗舰店</span>
+                    <span style="color: #ff6600;">›</span>
+                </div>
+            </div>
+
+            <div class="product-card" data-product-id="1007">
+                <img src="https://via.placeholder.com/400x400/0066cc/ffffff?text=AirPods" alt="AirPods Pro" class="product-image">
+                <div class="product-info">
+                    <h4 class="product-title">Apple AirPods Pro (第二代) 搭配MagSafe充电盒 主动降噪无线蓝牙耳机</h4>
+                    <div class="tags">
+                        <span class="tag">主动降噪</span>
+                        <span class="tag">空间音频</span>
+                    </div>
+                    <div class="product-price">¥1799<span class="original">¥1999</span></div>
+                    <div class="product-meta">
+                        <span class="product-sales">月销 3.5万+</span>
+                        <span>收藏 8.9万</span>
+                    </div>
+                </div>
+                <div class="shop-info">
+                    <div class="shop-avatar">Apple</div>
+                    <span class="shop-name">Apple官方旗舰店</span>
+                    <span style="color: #ff6600;">›</span>
+                </div>
+            </div>
+
+            <div class="product-card" data-product-id="1008">
+                <img src="https://via.placeholder.com/400x400/333333/ffffff?text=iPad+Pro" alt="iPad Pro" class="product-image">
+                <div class="product-info">
+                    <h4 class="product-title">Apple iPad Pro 12.9英寸 M2芯片 256G WLAN版 平板电脑 深空灰色</h4>
+                    <div class="tags">
+                        <span class="tag">M2芯片</span>
+                        <span class="tag">Liquid视网膜XDR</span>
+                    </div>
+                    <div class="product-price">¥9299<span class="original">¥10299</span></div>
+                    <div class="product-meta">
+                        <span class="product-sales">月销 4500+</span>
+                        <span>收藏 2.8万</span>
+                    </div>
+                </div>
+                <div class="shop-info">
+                    <div class="shop-avatar">Apple</div>
+                    <span class="shop-name">Apple官方旗舰店</span>
+                    <span style="color: #ff6600;">›</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="pagination">
+            <button disabled>上一页</button>
+            <button class="active">1</button>
+            <button>2</button>
+            <button>3</button>
+            <button>4</button>
+            <button>5</button>
+            <button>下一页</button>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>© 2024 VisualSpider 测试平台 - 仅供爬虫功能测试使用</p>
+        <p style="margin-top: 10px;">页面包含：商品列表、筛选条件、分页导航、店铺信息等多种元素</p>
+    </div>
+
+    <script>
+        document.querySelectorAll('.product-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const productId = card.dataset.productId;
+                const title = card.querySelector('.product-title').textContent;
+                const price = card.querySelector('.product-price').textContent.split('¥')[1];
+                console.log('点击商品:', { productId, title, price });
+                alert(`商品ID: ${productId}\n商品名称: ${title}\n价格: ¥${price}`);
+            });
+        });
+    </script>
+</body>
+</html>

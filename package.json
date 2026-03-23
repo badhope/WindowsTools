@@ -1,13 +1,30 @@
 {
   "name": "visual-spider",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
+  "description": "A powerful visual web crawler with intelligent interface adaptation and data extraction capabilities",
+  "author": "VisualSpider Team",
+  "license": "MIT",
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
+    "lint:check": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --ignore-path .gitignore",
+    "format": "prettier --write src/",
+    "format:check": "prettier --check src/",
+    "typecheck": "vue-tsc --noEmit",
+    "prepare": "husky install",
+    "dev:server": "cd server && npm run dev",
+    "build:server": "cd server && npm run build",
+    "start:server": "cd server && npm start",
+    "setup:env": "cd server && npx tsx src/setup.ts",
+    "install:server": "cd server && npm install"
   },
   "dependencies": {
     "vue": "^3.4.21",
@@ -21,7 +38,8 @@
     "xlsx": "^0.18.5",
     "jspdf": "^2.5.1",
     "compromise": "^14.12.0",
-    "diff-match-patch": "^1.0.5"
+    "diff-match-patch": "^1.0.5",
+    "vue-i18n": "^9.10.2"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2.0.0",
@@ -31,6 +49,42 @@
     "vite": "^5.1.6",
     "vue-tsc": "^2.0.6",
     "@types/file-saver": "^2.0.7",
-    "@types/diff-match-patch": "^1.0.36"
-  }
+    "@types/diff-match-patch": "^1.0.36",
+    "vitest": "^1.3.1",
+    "@vue/test-utils": "^2.4.4",
+    "jsdom": "^24.0.0",
+    "eslint": "^8.57.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.2",
+    "@typescript-eslint/parser": "^7.0.2",
+    "eslint-plugin-vue": "^9.22.0",
+    "@vue/eslint-config-typescript": "^12.0.0",
+    "prettier": "^3.2.5",
+    "husky": "^9.0.11",
+    "lint-staged": "^15.2.2"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,vue}": "eslint --fix",
+    "*.{js,jsx,ts,tsx,vue,css,scss,html,json,md}": "prettier --write"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "keywords": [
+    "web-crawler",
+    "visual-crawler",
+    "web-scraping",
+    "data-extraction",
+    "vue",
+    "typescript",
+    "visual-spider"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nicholasjq/visual-spider.git"
+  },
+  "bugs": {
+    "url": "https://github.com/nicholasjq/visual-spider/issues"
+  },
+  "homepage": "https://github.com/nicholasjq/visual-spider#readme"
 }

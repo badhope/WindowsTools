@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  visual-spider:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - ./data:/usr/share/nginx/html/data
+      - ./logs:/var/log/nginx
+    restart: unless-stopped
+    networks:
+      - visual-spider-network
+
+  # 可选: Puppeteer浏览器服务
+  puppeteer-server:
+    image: ghcr.io/nicholasjq/puppeteer-server:latest
+    ports:
+      - "9222:9222"
+    environment:
+      - PORT=9222
+    restart: unless-stopped
+    networks:
+      - visual-spider-network
+
+  # 可选: 后端API服务(如有)
+  api-server:
+    image: node:18-alpine
+    working_dir: /app
+    command: npm run start
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./server:/app
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    restart: unless-stopped
+    networks:
+      - visual-spider-network
+
+networks:
+  visual-spider-network:
+    driver: bridge

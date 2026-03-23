@@ -1,0 +1,138 @@
+[
+  {
+    "id": 1001,
+    "title": "Apple iPhone 15 Pro 256GB 钛金属设计 A17 Pro芯片 支持移动联通电信5G",
+    "price": 7999,
+    "originalPrice": 8999,
+    "sales": "月销 1.2万+",
+    "favorites": "收藏 3.5万",
+    "shop": {
+      "name": "Apple官方旗舰店",
+      "avatar": "Apple"
+    },
+    "tags": ["正品保障", "免息分期"],
+    "image": "https://via.placeholder.com/400x400/ff6600/ffffff?text=iPhone+15",
+    "category": "electronics",
+    "rating": 4.9,
+    "shipping": "免运费"
+  },
+  {
+    "id": 1002,
+    "title": "Apple MacBook Pro 14英寸 M3 Pro芯片 18G+512G 深空黑 笔记本电脑",
+    "price": 16999,
+    "originalPrice": 18999,
+    "sales": "月销 8000+",
+    "favorites": "收藏 2.1万",
+    "shop": {
+      "name": "Apple官方旗舰店",
+      "avatar": "Apple"
+    },
+    "tags": ["官方正品", "极速发货"],
+    "image": "https://via.placeholder.com/400x400/1a1a1a/ffffff?text=MacBook+Pro",
+    "category": "electronics",
+    "rating": 4.8,
+    "shipping": "免运费"
+  },
+  {
+    "id": 1003,
+    "title": "华为 P60 Pro 超聚光夜视长焦 昆仑玻璃 双向北斗卫星消息 旗舰手机",
+    "price": 5988,
+    "originalPrice": 6988,
+    "sales": "月销 6000+",
+    "favorites": "收藏 1.8万",
+    "shop": {
+      "name": "华为官方旗舰店",
+      "avatar": "华为"
+    },
+    "tags": ["国产精品", "摄影旗舰"],
+    "image": "https://via.placeholder.com/400x400/0066cc/ffffff?text=HUAWEI+P60",
+    "category": "electronics",
+    "rating": 4.7,
+    "shipping": "免运费"
+  },
+  {
+    "id": 1004,
+    "title": "小米14 骁龙8Gen3处理器 徕卡光学镜头 光影猎人900 澎湃OS 5G手机",
+    "price": 3999,
+    "originalPrice": 4599,
+    "sales": "月销 2.5万+",
+    "favorites": "收藏 5.6万",
+    "shop": {
+      "name": "小米官方旗舰店",
+      "avatar": "小米"
+    },
+    "tags": ["性价比之王", "骁龙8Gen3"],
+    "image": "https://via.placeholder.com/400x400/00cc66/ffffff?text=小米14",
+    "category": "electronics",
+    "rating": 4.9,
+    "shipping": "免运费"
+  },
+  {
+    "id": 1005,
+    "title": "索尼 PS5 PlayStation5 游戏机 国行版 光驱版 次世代游戏主机 限量版",
+    "price": 3999,
+    "originalPrice": 4499,
+    "sales": "月销 5000+",
+    "favorites": "收藏 4.2万",
+    "shop": {
+      "name": "索尼官方旗舰店",
+      "avatar": "索尼"
+    },
+    "tags": ["游戏利器", "次世代主机"],
+    "image": "https://via.placeholder.com/400x400/9900ff/ffffff?text=PS5",
+    "category": "electronics",
+    "rating": 4.8,
+    "shipping": "免运费"
+  },
+  {
+    "id": 1006,
+    "title": "任天堂 Nintendo Switch OLED版 精灵宝可梦朱紫限定机 游戏机 便携主机",
+    "price": 2599,
+    "originalPrice": 2999,
+    "sales": "月销 1.8万+",
+    "favorites": "收藏 6.3万",
+    "shop": {
+      "name": "任天堂旗舰店",
+      "avatar": "任"
+    },
+    "tags": ["任天堂", "限定版"],
+    "image": "https://via.placeholder.com/400x400/cc0000/ffffff?text=Switch",
+    "category": "electronics",
+    "rating": 4.9,
+    "shipping": "免运费"
+  },
+  {
+    "id": 1007,
+    "title": "Apple AirPods Pro (第二代) 搭配MagSafe充电盒 主动降噪无线蓝牙耳机",
+    "price": 1799,
+    "originalPrice": 1999,
+    "sales": "月销 3.5万+",
+    "favorites": "收藏 8.9万",
+    "shop": {
+      "name": "Apple官方旗舰店",
+      "avatar": "Apple"
+    },
+    "tags": ["主动降噪", "空间音频"],
+    "image": "https://via.placeholder.com/400x400/0066cc/ffffff?text=AirPods",
+    "category": "electronics",
+    "rating": 4.8,
+    "shipping": "免运费"
+  },
+  {
+    "id": 1008,
+    "title": "Apple iPad Pro 12.9英寸 M2芯片 256G WLAN版 平板电脑 深空灰色",
+    "price": 9299,
+    "originalPrice": 10299,
+    "sales": "月销 4500+",
+    "favorites": "收藏 2.8万",
+    "shop": {
+      "name": "Apple官方旗舰店",
+      "avatar": "Apple"
+    },
+    "tags": ["M2芯片", "Liquid视网膜XDR"],
+    "image": "https://via.placeholder.com/400x400/333333/ffffff?text=iPad+Pro",
+    "category": "electronics",
+    "rating": 4.9,
+    "shipping": "免运费"
+  }
+]

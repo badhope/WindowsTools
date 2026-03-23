@@ -8,45 +8,56 @@
       <nav class="nav-menu">
         <el-button :type="route.path === '/' ? 'primary' : 'default'" @click="router.push('/')">
           <el-icon><Document /></el-icon>
-          任务配置
+          {{ $t('nav.taskConfig') }}
         </el-button>
         <el-button :type="route.path === '/tasks' ? 'primary' : 'default'" @click="router.push('/tasks')">
           <el-icon><List /></el-icon>
-          任务列表
+          {{ $t('nav.taskList') }}
         </el-button>
         <el-button :type="route.path === '/templates' ? 'primary' : 'default'" @click="router.push('/templates')">
           <el-icon><Collection /></el-icon>
-          模板市场
+          {{ $t('nav.templates') }}
         </el-button>
         <el-button :type="route.path === '/settings' ? 'primary' : 'default'" @click="router.push('/settings')">
           <el-icon><Setting /></el-icon>
-          设置
+          {{ $t('nav.settings') }}
         </el-button>
         <el-button :type="route.path === '/clean' ? 'primary' : 'default'" @click="router.push('/clean')">
           <el-icon><Brush /></el-icon>
-          数据清洗
+          {{ $t('nav.dataClean') }}
         </el-button>
         <el-button :type="route.path === '/selector' ? 'primary' : 'default'" @click="router.push('/selector')">
           <el-icon><Aim /></el-icon>
-          选择器
+          {{ $t('nav.selector') }}
         </el-button>
         <el-button :type="route.path === '/screenshot' ? 'primary' : 'default'" @click="router.push('/screenshot')">
           <el-icon><Camera /></el-icon>
-          截图
+          {{ $t('nav.screenshot') }}
         </el-button>
         <el-button :type="route.path === '/analyzer' ? 'primary' : 'default'" @click="router.push('/analyzer')">
           <el-icon><Monitor /></el-icon>
-          URL分析
+          {{ $t('nav.urlAnalyzer') }}
         </el-button>
         <el-button :type="route.path === '/browser' ? 'primary' : 'default'" @click="router.push('/browser')">
           <el-icon><Connection /></el-icon>
-          兼容检测
+          {{ $t('nav.browserInfo') }}
         </el-button>
         <el-button :type="route.path === '/adapter' ? 'primary' : 'default'" @click="router.push('/adapter')">
           <el-icon><Grid /></el-icon>
-          界面适配
+          {{ $t('nav.interfaceAdapter') }}
+        </el-button>
+        <el-button :type="route.path === '/server' ? 'primary' : 'default'" @click="router.push('/server')">
+          <el-icon><Cpu /></el-icon>
+          {{ $t('nav.server') }}
         </el-button>
       </nav>
+      <div class="header-actions">
+        <LanguageSwitcher />
+        <NotificationPanel />
+        <el-button circle @click="openLogViewer">
+          <el-icon><Tickets /></el-icon>
+        </el-button>
+      </div>
     </header>
     <main class="app-main">
       <router-view />
@@ -58,36 +69,63 @@
           <el-icon v-else class="status-running"><Loading /></el-icon>
           {{ statusText }}
         </span>
-        <span class="status-item">已抓取: {{ crawlStats.crawled }} 条</span>
-        <span class="status-item">成功: {{ crawlStats.success }} 条</span>
-        <span class="status-item" v-if="crawlStats.errors > 0">错误: {{ crawlStats.errors }}</span>
+        <span class="status-item">{{ $t('status.crawled') }}: {{ crawlStats.crawled }}</span>
+        <span class="status-item">{{ $t('status.success') }}: {{ crawlStats.success }}</span>
+        <span class="status-item" v-if="crawlStats.errors > 0">{{ $t('status.errors') }}: {{ crawlStats.errors }}</span>
       </div>
     </footer>
+
+    <LogViewer ref="logViewerRef" />
+    <ErrorDetail ref="errorDetailRef" />
+    <WelcomeGuide ref="welcomeGuideRef" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useTaskStore } from '@/stores/taskStore'
-import { Brush, Aim, Camera, Monitor, Connection, Grid } from '@element-plus/icons-vue'
+import { useAppStore } from '@/stores/appStore'
+import { Brush, Aim, Camera, Monitor, Connection, Grid, Tickets, Cpu } from '@element-plus/icons-vue'
+import NotificationPanel from '@/components/NotificationPanel.vue'
+import LogViewer from '@/components/LogViewer.vue'
+import ErrorDetail from '@/components/ErrorDetail.vue'
+import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
+import WelcomeGuide from '@/components/WelcomeGuide.vue'
 
+const { t } = useI18n()
 const route = useRoute()
+const welcomeGuideRef = ref<InstanceType<typeof WelcomeGuide> | null>(null)
 const router = useRouter()
 const taskStore = useTaskStore()
+const appStore = useAppStore()
+
+const logViewerRef = ref<InstanceType<typeof LogViewer> | null>(null)
+const errorDetailRef = ref<InstanceType<typeof ErrorDetail> | null>(null)
 
 const status = computed(() => taskStore.crawlStatus)
 const statusText = computed(() => {
   switch (status.value) {
-    case 'idle': return '就绪'
-    case 'running': return '抓取中...'
-    case 'paused': return '已暂停'
-    case 'completed': return '已完成'
-    case 'error': return '出错'
-    default: return '就绪'
+    case 'idle': return t('status.idle')
+    case 'running': return t('status.running')
+    case 'paused': return t('status.paused')
+    case 'completed': return t('status.completed')
+    case 'error': return t('status.error')
+    default: return t('status.idle')
   }
 })
 const crawlStats = computed(() => taskStore.crawlStats)
+
+function openLogViewer(): void {
+  logViewerRef.value?.open()
+}
+
+onMounted(() => {
+  appStore.initialize()
+  taskStore.loadTasks()
+  welcomeGuideRef.value?.checkShouldShow()
+})
 </script>
 
 <style>
@@ -112,68 +150,68 @@ html, body, #app {
 .app-header {
   display: flex;
   align-items: center;
-  padding: 0 20px;
-  height: 60px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  padding: 12px 20px;
+  background: white;
+  border-bottom: 1px solid #e4e7ed;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  gap: 8px;
 }
 
 .logo {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-right: 40px;
+  padding: 0 16px;
+  color: #409eff;
+  font-weight: 600;
+  font-size: 18px;
 }
 
 .logo-text {
-  font-size: 20px;
-  font-weight: 600;
+  white-space: nowrap;
 }
 
 .nav-menu {
   display: flex;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: 4px;
+  flex: 1;
 }
 
 .nav-menu .el-button {
-  background: transparent;
-  border: none;
-  color: rgba(255,255,255,0.85);
+  font-size: 13px;
 }
 
-.nav-menu .el-button:hover,
-.nav-menu .el-button.active {
-  background: rgba(255,255,255,0.2);
-  color: white;
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .app-main {
   flex: 1;
-  overflow: auto;
+  overflow-y: auto;
   padding: 20px;
 }
 
 .app-footer {
-  height: 36px;
   background: white;
   border-top: 1px solid #e4e7ed;
-  display: flex;
-  align-items: center;
-  padding: 0 20px;
+  padding: 8px 20px;
 }
 
 .status-bar {
   display: flex;
-  gap: 30px;
-  font-size: 13px;
+  align-items: center;
+  gap: 20px;
+  font-size: 12px;
   color: #606266;
 }
 
 .status-item {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
 }
 
 .status-running {

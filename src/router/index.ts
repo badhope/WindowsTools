@@ -9,6 +9,7 @@ import Screenshot from '@/views/Screenshot.vue'
 import UrlAnalyzer from '@/views/UrlAnalyzer.vue'
 import BrowserInfo from '@/views/BrowserInfo.vue'
 import InterfaceAdapter from '@/views/InterfaceAdapter.vue'
+import ServerManager from '@/views/ServerManager.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -62,6 +63,11 @@ const router = createRouter({
       path: '/adapter',
       name: 'InterfaceAdapter',
       component: InterfaceAdapter
+    },
+    {
+      path: '/server',
+      name: 'ServerManager',
+      component: ServerManager
     }
   ]
 })
