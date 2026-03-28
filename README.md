@@ -1,398 +1,130 @@
-# 🕷️ VisualSpider
+# 🛠️ Windows工具箱
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Version-1.0.1-blue.svg" alt="Version">
+  <img src="https://img.shields.io/badge/Version-1.0.0-blue.svg" alt="Version">
   <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License">
+  <img src="https://img.shields.io/badge/Tauri-2.0-orange.svg" alt="Tauri">
   <img src="https://img.shields.io/badge/Vue-3.4-brightgreen.svg" alt="Vue">
-  <img src="https://img.shields.io/badge/TypeScript-5.4-blue.svg" alt="TypeScript">
-  <img src="https://img.shields.io/badge/Node.js-18%2B-brightgreen.svg" alt="Node">
+  <img src="https://img.shields.io/badge/Rust-1.75+-orange.svg" alt="Rust">
 </p>
 
-> 🌍 **[English](README.md)** | **[中文](README_zh-CN.md)**
+> 一款面向Windows用户的系统管理可视化工具，将复杂的命令行操作、注册表编辑、系统设置等高级功能转化为直观的图形界面按钮操作。
 
 ---
 
-## 📖 Overview
+## ✨ 功能特性
 
-**VisualSpider** is a powerful, user-friendly visual web crawler that enables users to extract data from any website without writing code. Built with Vue 3 and Element Plus, it provides an intuitive graphical interface for configuring crawling tasks, testing selectors, cleaning data, and exporting results in multiple formats.
+### 核心模块
 
-### ✨ Key Features
-
-- 🎨 **Visual Configuration** - Point-and-click interface for configuring crawl tasks
-- 🔍 **Smart Selector Testing** - Test CSS and XPath selectors in real-time
-- 🧹 **Data Cleaning** - Built-in tools for text processing and data normalization
-- 📊 **Multiple Export Formats** - Export to CSV, JSON, Excel, HTML, PDF, Markdown, and more
-- 🌐 **Internationalization** - Full support for English and Chinese languages
-- 🔄 **Browser Automation** - Puppeteer-powered backend for JavaScript-rendered pages
-- 🖥️ **Interface Adaptation** - Intelligent handling of complex website structures
-- 📸 **Screenshot Capture** - Full-page and region screenshots with annotations
-- 🛡️ **Error Handling** - Clear error messages and comprehensive logging
-- ⚡ **Performance Optimization** - Efficient batch processing and caching
-- 🕵️ **Anti-Detection** - Stealth mode with random User-Agent rotation
+| 模块 | 功能描述 |
+|------|---------|
+| 🖥️ **仪表盘** | 系统信息概览、快速访问入口 |
+| 💻 **PowerShell命令** | 可视化执行命令、常用模板、历史记录 |
+| 📁 **注册表管理** | 可视化浏览、编辑、导出注册表 |
+| ⚙️ **服务管理** | 查看/启动/停止/重启Windows服务 |
+| 📊 **进程管理** | 实时监控、CPU/内存排序、结束进程 |
+| 🌐 **网络工具** | 连接查看、端口占用、DNS管理 |
+| 💾 **磁盘工具** | 空间分析、磁盘清理、磁盘检查 |
+| ⚡ **快捷操作** | 一键打开系统工具 |
+| 📈 **系统优化** | 启动项、计划任务、临时文件清理 |
+| 🔧 **高级工具** | 环境变量、Hosts、SFC/DISM修复 |
 
 ---
 
-## 🚀 Quick Start
+## 🚀 快速开始
 
-### Prerequisites
+### 环境要求
 
-| Requirement | Version | Notes |
-|------------|---------|-------|
-| Node.js | ≥ 18.0.0 | [Download](https://nodejs.org/) |
-| npm | ≥ 9.0.0 | Included with Node.js |
-| Chromium | Optional | Required for JS-rendered pages |
+| 依赖 | 版本 |
+|-----|------|
+| Node.js | ≥ 18.0.0 |
+| Rust | ≥ 1.75.0 |
+| Windows | 10/11 |
 
-### Installation
+### 安装运行
 
 ```bash
-# 1. Clone the repository
+# 克隆仓库
 git clone https://github.com/badhope/VisualSpider.git
 cd VisualSpider
 
-# 2. Install frontend dependencies
+# 安装依赖
 npm install
 
-# 3. Install backend dependencies (optional)
-cd server && npm install
-cd ..
+# 开发模式
+npm run tauri dev
 
-# 4. Start development server
-npm run dev
+# 构建发布
+npm run tauri build
 ```
-
-### Environment Setup (Optional)
-
-For Puppeteer browser automation support:
-
-```bash
-# Setup browser and environment
-npm run setup:env
-
-# Or run server setup manually
-cd server && npm run setup-browser
-```
-
-### Access the Application
-
-| Service | URL | Description |
-|---------|-----|-------------|
-| Frontend | http://localhost:1420 | Main application |
-| Backend API | http://localhost:3000 | API documentation |
-| Health Check | http://localhost:3000/api/health | Server status |
 
 ---
 
-## 🎯 Usage Guide
-
-### 1. Create a Crawl Task
-
-1. Navigate to **Task Config** page
-2. Enter the target URL (e.g., `https://example.com/products`)
-3. Click **Auto Detect** or manually add data selectors
-4. Configure pagination if needed
-5. Click **Start Crawling**
-
-### 2. Configure Selectors
-
-Supported selector types:
-
-| Type | Example | Use Case |
-|------|---------|----------|
-| CSS | `.product-card .title` | Class-based elements |
-| XPath | `//div[@class='title']` | Complex queries |
-| Regex | `\d+\.\d{2}` | Pattern matching |
-
-### 3. Data Cleaning
-
-Upload raw data files to **Data Clean** page:
-
-- **Transform**: Remove duplicates, trim whitespace, find & replace
-- **Format Convert**: Convert between CSV, JSON, Excel, XML, HTML
-- **Text Analysis**: Statistics, keywords, sentiment analysis
-- **Regex Tool**: Test and apply regular expressions
-
-### 4. Export Results
-
-| Format | Extension | Best For |
-|--------|-----------|----------|
-| CSV | .csv | Spreadsheets, databases |
-| JSON | .json | APIs, structured data |
-| Excel | .xlsx | Microsoft Excel |
-| HTML | .html | Web pages, reports |
-| PDF | .pdf | Documentation |
-| Markdown | .md | GitHub, wikis |
-| TSV | .tsv | Tab-separated data |
-| XML | .xml | Structured documents |
-
----
-
-## 🏗️ Project Structure
+## 📦 项目结构
 
 ```
-visual-spider/
-├── src/
-│   ├── components/          # Reusable Vue components
-│   │   ├── LanguageSwitcher.vue
-│   │   ├── LogViewer.vue
-│   │   ├── NotificationPanel.vue
-│   │   ├── ErrorDetail.vue
-│   │   └── WelcomeGuide.vue
-│   ├── views/              # Page components
-│   │   ├── TaskConfig.vue       # Crawl task configuration
-│   │   ├── TaskList.vue         # Task management
-│   │   ├── DataClean.vue        # Data cleaning tools
-│   │   ├── SelectorTester.vue   # Selector testing
-│   │   ├── Screenshot.vue        # Screenshot capture
-│   │   ├── UrlAnalyzer.vue      # URL analysis
-│   │   ├── ServerManager.vue    # Backend management
-│   │   └── Settings.vue         # Application settings
-│   ├── locales/             # i18n translations
-│   │   ├── en.json          # English
-│   │   └── zh-CN.json       # Chinese
-│   ├── stores/              # Pinia state management
-│   ├── services/            # API services
-│   ├── utils/               # Utility functions
-│   └── types/               # TypeScript definitions
-├── server/                  # Backend (Express + Puppeteer)
+windows-toolbox/
+├── src/                    # 前端源码
+│   ├── views/             # 页面视图
+│   │   ├── Dashboard.vue  # 仪表盘
+│   │   ├── PowerShell.vue # PowerShell命令
+│   │   ├── Registry.vue   # 注册表管理
+│   │   ├── Services.vue   # 服务管理
+│   │   ├── Processes.vue  # 进程管理
+│   │   ├── Network.vue    # 网络工具
+│   │   ├── Disk.vue       # 磁盘工具
+│   │   ├── QuickActions.vue # 快捷操作
+│   │   ├── Optimization.vue # 系统优化
+│   │   ├── Advanced.vue   # 高级工具
+│   │   └── Settings.vue   # 设置
+│   ├── stores/            # 状态管理
+│   ├── locales/           # 国际化
+│   └── components/        # 公共组件
+├── src-tauri/             # Tauri后端
 │   └── src/
-│       ├── routes/          # API endpoints
-│       │   ├── crawler.ts    # Crawling logic
-│       │   ├── browser.ts    # Browser automation
-│       │   └── proxy.ts      # Proxy management
-│       └── utils/           # Server utilities
-├── public/
-│   └── test-pages/         # Test pages
-├── .github/
-│   └── workflows/          # CI/CD pipelines
-└── dist/                    # Production build
+│       ├── system.rs      # 系统操作
+│       ├── registry.rs    # 注册表操作
+│       ├── process.rs     # 进程管理
+│       ├── service.rs     # 服务管理
+│       ├── network.rs     # 网络工具
+│       └── disk.rs        # 磁盘工具
+└── PROJECT_PLAN.md        # 项目计划书
 ```
 
 ---
 
-## 🌍 Internationalization
+## 🛠️ 技术栈
 
-VisualSpider supports **English** and **Chinese**. Click the 🌐 icon in the header to switch languages.
-
-### Supported Languages
-
-| Code | Language | Status |
-|------|----------|--------|
-| en | English | ✅ Complete |
-| zh-CN | 简体中文 | ✅ Complete |
-
-### Adding New Languages
-
-1. Create `src/locales/{locale}.json`
-2. Add locale to `src/locales/index.ts`
-3. Update `LanguageSwitcher.vue`
+| 层级 | 技术 |
+|-----|------|
+| 前端框架 | Vue 3 + TypeScript |
+| UI组件 | Element Plus |
+| 状态管理 | Pinia |
+| 桌面框架 | Tauri 2.0 |
+| 后端语言 | Rust |
+| 系统调用 | Windows API |
 
 ---
 
-## 🔧 Advanced Features
-
-### Anti-Detection Settings
-
-The crawler includes stealth mode to avoid blocking:
-
-- **Random User-Agent Rotation** - 6 browser profiles
-- **Stealth Mode** - Hides webdriver property
-- **Navigator Override** - Masks automation signatures
-- **Request Interception** - Blocks tracking resources
-
-### Proxy Pool
-
-Configure proxy servers in **Settings**:
+## 📝 开发命令
 
 ```bash
-# HTTP proxy
-http://proxy.example.com:8080
-
-# HTTPS proxy
-https://proxy.example.com:8080
-
-# SOCKS5 proxy
-socks5://proxy.example.com:1080
-
-# Authenticated proxy
-http://user:pass@proxy.example.com:8080
+npm run dev          # 启动前端开发服务器
+npm run tauri dev    # 启动Tauri开发模式
+npm run build        # 构建前端
+npm run tauri build  # 构建桌面应用
+npm run lint         # 代码检查
+npm run typecheck    # 类型检查
 ```
 
-### Browser Automation (Backend)
-
-The backend server provides:
-
-| Feature | Description |
-|---------|-------------|
-| Launch Browser | Start headless Chrome |
-| Navigate | Open URLs |
-| Evaluate | Execute JavaScript |
-| Screenshot | Capture page images |
-| Cookies | Manage authentication |
-
 ---
 
-## 📝 API Reference
+## 📄 许可证
 
-### Crawler Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | /api/crawler/crawl | Start crawl task |
-| GET | /api/crawler/tasks | List all tasks |
-| GET | /api/crawler/task/:id | Get task details |
-| DELETE | /api/crawler/task/:id | Delete task |
-
-### Browser Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | /api/browser/launch | Launch browser |
-| POST | /api/browser/close | Close browser |
-| POST | /api/browser/screenshot | Take screenshot |
-| POST | /api/browser/evaluate | Run JS code |
-
-### Proxy Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | /api/proxy/list | List proxies |
-| POST | /api/proxy/add | Add proxy |
-| POST | /api/proxy/test | Test proxy |
-| DELETE | /api/proxy/:id | Remove proxy |
-
----
-
-## 🔒 Upload Instructions
-
-### Preparing Your Data
-
-#### File Format Requirements
-
-| Format | Extension | Max Size | Encoding |
-|--------|-----------|----------|----------|
-| CSV | .csv | 50MB | UTF-8 |
-| JSON | .json | 20MB | UTF-8 |
-| Excel | .xlsx | 20MB | - |
-| Text | .txt | 10MB | UTF-8 |
-
-#### Naming Conventions
-
-```
-# Files should follow these naming rules:
-- Use alphanumeric characters only
-- No spaces, use underscores or hyphens
-- Include date if relevant: data_20240115.csv
-- Be descriptive: product_list_q1.csv
-
-# Examples:
-✅ valid_file_name.csv
-✅ product-data-2024.csv
-✅ article_titles.json
-❌ my file.csv (spaces not allowed)
-❌ file@name.csv (special chars not allowed)
-```
-
-### Upload Steps
-
-1. **Prepare your data file**
-   - Convert to supported format (CSV, JSON, Excel)
-   - Ensure UTF-8 encoding
-   - Follow naming conventions
-
-2. **Navigate to Data Clean page**
-   - Click "导入数据" or "Quick Import"
-   - Select file format
-
-3. **Configure processing options**
-   - Select transformation operations
-   - Set regex patterns if needed
-   - Choose output format
-
-4. **Export processed data**
-   - Select target format
-   - Click export button
-   - Save to local directory
-
-### Error Handling
-
-| Error | Cause | Solution |
-|-------|-------|----------|
-| File too large | Exceeds size limit | Split into smaller files |
-| Invalid encoding | Non-UTF-8 content | Re-save with UTF-8 encoding |
-| Parse error | Malformed file | Check file structure |
-| Format mismatch | Wrong file type | Verify file extension |
-
-### Verification Methods
-
-1. **Preview**: Check data preview before processing
-2. **Validate**: Use "Test" button for regex patterns
-3. **Export Sample**: Export first 100 rows for verification
-4. **Checksum**: Compare file hash before/after upload
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md).
-
-### Development Setup
-
-```bash
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
-
-# Type checking
-npm run typecheck
-
-# Linting
-npm run lint
-
-# Testing
-npm run test
-
-# Build for production
-npm run build
-```
-
-### Code Style
-
-- Use **Vue 3 Composition API**
-- Follow **TypeScript** best practices
-- Use **Element Plus** components
-- Follow existing naming conventions
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License - see [LICENSE](LICENSE) for details.
-
----
-
-## 🙏 Acknowledgments
-
-- [Vue.js](https://vuejs.org/) - The Progressive JavaScript Framework
-- [Element Plus](https://element-plus.org/) - A Vue.js 3 UI Library
-- [Puppeteer](https://pptr.dev/) - Headless Chrome Node.js API
-- [xlsx](https://sheetjs.com/) - SheetJS Excel/CSV Parser
-- [html2canvas](https://html2canvas.hertzen.com/) - HTML-to-Canvas converter
-
----
-
-## 📧 Contact & Support
-
-| Channel | Link |
-|---------|------|
-| GitHub Issues | [Report bugs or request features](https://github.com/badhope/VisualSpider/issues) |
-| Documentation | [Wiki](https://github.com/badhope/VisualSpider/wiki) |
+[MIT License](LICENSE)
 
 ---
 
 <p align="center">
-  <strong>Made with ❤️ by the VisualSpider Team</strong>
-  <br>
-  <sub>⭐ Star this repo if you find it useful!</sub>
+  <strong>Made with ❤️ by WindowsToolbox Team</strong>
 </p>
