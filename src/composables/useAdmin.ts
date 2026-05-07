@@ -1,5 +1,6 @@
 import { ref } from 'vue'
 import { isAdmin, restartAsAdmin } from '@/api/tauri'
+export { restartAsAdmin }
 
 const isAdminRef = ref(false)
 const checked = ref(false)

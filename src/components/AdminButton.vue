@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { checkAdminStatus, restartAsAdmin } from '@/composables/useAdmin'
-import { Shield } from '@element-plus/icons-vue'
-import type { ElButtonProps } from 'element-plus'
+import { Lock } from '@element-plus/icons-vue'
+import type { ButtonProps } from 'element-plus'
 
 const props = withDefaults(defineProps<{
   actionName: string
   disabled?: boolean
   loading?: boolean
-  type?: ElButtonProps['type']
-  size?: ElButtonProps['size']
+  type?: ButtonProps['type']
+  size?: ButtonProps['size']
   icon?: any
 }>(), {
   type: 'primary',
@@ -63,7 +63,7 @@ const handleClick = async () => {
   >
     <template #icon>
       <component :is="icon" v-if="icon" />
-      <Shield v-else-if="!isAdmin && !isChecking" />
+      <Lock v-else-if="!isAdmin && !isChecking" />
     </template>
     <slot>
       {{ actionName }}

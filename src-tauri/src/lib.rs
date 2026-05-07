@@ -340,6 +340,16 @@ fn check_windows_update() -> Result<(), String> {
     system::check_windows_update()
 }
 
+#[command]
+fn get_logs() -> Result<Vec<String>, String> {
+    Ok(vec![])
+}
+
+#[command]
+fn clear_logs() -> Result<(), String> {
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     env_logger::init();
@@ -395,6 +405,8 @@ pub fn run() {
             run_sfc_scan,
             run_dism,
             check_windows_update,
+            get_logs,
+            clear_logs,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
