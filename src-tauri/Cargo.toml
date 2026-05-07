@@ -1,17 +1,17 @@
 [package]
-name = "visual-spider"
+name = "windows-tools"
 version = "1.1.0"
-description = "VisualSpider - A powerful Windows system management tool"
+description = "WindowsTools - A powerful Windows system management tool"
 authors = ["badhope <badhope@users.noreply.github.com>"]
 edition = "2021"
 license = "MIT"
-repository = "https://github.com/badhope/VisualSpider"
+repository = "https://github.com/badhope/WindowsTools"
 readme = "README.md"
 keywords = ["windows", "system", "toolbox", "management", "tauri"]
 categories = ["gui", "os::windows-apis"]
 
 [lib]
-name = "visual_spider_lib"
+name = "windows_tools_lib"
 crate-type = ["cdylib", "rlib"]
 
 [build-dependencies]
@@ -36,7 +36,9 @@ windows = { version = "0.58", features = [
     "Win32_NetworkManagement_IpHelper",
     "Win32_Networking_WinSock",
     "Win32_Storage_FileSystem",
-    "Win32_Security"
+    "Win32_Security",
+    "Win32_System_Diagnostics_ToolHelp",
+    "Win32_System_Diagnostics_Debug"
 ] }
 winreg = "0.52"
 sysinfo = "0.32"

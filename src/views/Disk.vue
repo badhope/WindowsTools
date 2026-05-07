@@ -46,9 +46,13 @@
                   <el-button size="small" @click="cleanupDisk(disk.name)">
                     {{ $t('disk.cleanup') }}
                   </el-button>
-                  <el-button size="small" @click="checkDisk(disk.name)">
+                  <AdminButton 
+                    :action-name="`${$t('disk.check')} ${disk.name}`"
+                    size="small"
+                    @click="checkDisk(disk.name)"
+                  >
                     {{ $t('disk.check') }}
-                  </el-button>
+                  </AdminButton>
                 </div>
               </el-card>
             </el-col>
@@ -61,11 +65,12 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { invoke } from '@tauri-apps/api/core'
 import { ElMessage } from 'element-plus'
 import { Refresh, FolderOpened } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
 import type { DiskInfo } from '@/types'
+import { getDiskInfo, cleanupDisk as apiCleanupDisk, checkDisk as apiCheckDisk } from '@/api/tauri'
+import AdminButton from '@/components/AdminButton.vue'
 
 const { t } = useI18n()
 const loading = ref(false)
@@ -88,8 +93,12 @@ function getProgressColor(ratio: number): string {
 async function loadDisks() {
   loading.value = true
   try {
-    const result = await invoke<DiskInfo[]>('get_disk_info')
-    disks.value = result
+    const result = await getDiskInfo()
+    if (result.success && result.data) {
+      disks.value = result.data
+    } else {
+      ElMessage.error(t('disk.loadFailed') + `: ${result.error}`)
+    }
   } catch (error) {
     ElMessage.error(t('disk.loadFailed') + `: ${error}`)
   } finally {
@@ -99,9 +108,13 @@ async function loadDisks() {
 
 async function cleanupDisk(drive: string) {
   try {
-    await invoke('cleanup_disk', { drive })
-    ElMessage.success(t('disk.cleanupSuccess', { drive }))
-    await loadDisks()
+    const result = await apiCleanupDisk(drive)
+    if (result.success) {
+      ElMessage.success(t('disk.cleanupSuccess', { drive }))
+      await loadDisks()
+    } else {
+      ElMessage.error(t('disk.cleanupFailed') + `: ${result.error}`)
+    }
   } catch (error) {
     ElMessage.error(t('disk.cleanupFailed') + `: ${error}`)
   }
@@ -109,8 +122,12 @@ async function cleanupDisk(drive: string) {
 
 async function checkDisk(drive: string) {
   try {
-    await invoke('check_disk', { drive })
-    ElMessage.success(t('disk.checkSuccess', { drive }))
+    const result = await apiCheckDisk(drive)
+    if (result.success) {
+      ElMessage.success(t('disk.checkSuccess', { drive }))
+    } else {
+      ElMessage.error(t('disk.checkFailed') + `: ${result.error}`)
+    }
   } catch (error) {
     ElMessage.error(t('disk.checkFailed') + `: ${error}`)
   }

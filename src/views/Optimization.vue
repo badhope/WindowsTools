@@ -15,9 +15,16 @@
             <el-table-column prop="name" :label="$t('registry.name')" show-overflow-tooltip />
             <el-table-column prop="command" :label="$t('powershell.commandInput')" show-overflow-tooltip />
             <el-table-column prop="location" :label="$t('registry.value')" show-overflow-tooltip />
-            <el-table-column :label="$t('common.edit')" width="100">
+            <el-table-column :label="$t('common.edit')" width="120">
               <template #default="{ row }">
-                <el-switch v-model="row.enabled" @change="toggleStartupItem(row)" />
+                <AdminButton 
+                  :action-name="`${row.enabled ? $t('optimization.disable') : $t('optimization.enable')} ${row.name}`"
+                  text 
+                  size="small"
+                  @click="toggleStartupItem(row)"
+                >
+                  {{ row.enabled ? $t('optimization.disable') : $t('optimization.enable') }}
+                </AdminButton>
               </template>
             </el-table-column>
           </el-table>
@@ -83,10 +90,24 @@
             </el-table-column>
             <el-table-column prop="lastRun" :label="$t('optimization.lastRun')" width="180" />
             <el-table-column prop="nextRun" :label="$t('optimization.nextRun')" width="180" />
-            <el-table-column :label="$t('common.edit')" width="150">
+            <el-table-column :label="$t('common.edit')" width="180">
               <template #default="{ row }">
-                <el-button text size="small" @click="runTask(row.name)">{{ $t('optimization.run') }}</el-button>
-                <el-button text size="small" @click="disableTask(row.name)">{{ $t('optimization.disable') }}</el-button>
+                <AdminButton 
+                  :action-name="`${$t('optimization.run')} ${row.name}`"
+                  text 
+                  size="small"
+                  @click="runTask(row.name)"
+                >
+                  {{ $t('optimization.run') }}
+                </AdminButton>
+                <AdminButton 
+                  :action-name="`${$t('optimization.disable')} ${row.name}`"
+                  text 
+                  size="small"
+                  @click="disableTask(row.name)"
+                >
+                  {{ $t('optimization.disable') }}
+                </AdminButton>
               </template>
             </el-table-column>
           </el-table>
@@ -102,6 +123,7 @@ import { invoke } from '@tauri-apps/api/core'
 import { ElMessage } from 'element-plus'
 import { Refresh, Delete, Brush, TrendCharts } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
+import AdminButton from '@/components/AdminButton.vue'
 
 const { t } = useI18n()
 const loadingStartup = ref(false)

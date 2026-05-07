@@ -10,22 +10,44 @@
           </template>
           
           <div class="quick-actions">
-            <el-button type="primary" @click="flushDns">
-              <el-icon><Refresh /></el-icon>
+            <AdminButton 
+              :action-name="$t('network.flushDns')"
+              type="primary" 
+              @click="flushDns"
+            >
+              <template #icon>
+                <el-icon><Refresh /></el-icon>
+              </template>
               {{ $t('network.flushDns') }}
-            </el-button>
-            <el-button @click="releaseIp">
-              <el-icon><SwitchButton /></el-icon>
+            </AdminButton>
+            <AdminButton 
+              :action-name="$t('network.releaseIp')"
+              @click="releaseIp"
+            >
+              <template #icon>
+                <el-icon><SwitchButton /></el-icon>
+              </template>
               {{ $t('network.releaseIp') }}
-            </el-button>
-            <el-button @click="renewIp">
-              <el-icon><Connection /></el-icon>
+            </AdminButton>
+            <AdminButton 
+              :action-name="$t('network.renewIp')"
+              @click="renewIp"
+            >
+              <template #icon>
+                <el-icon><Connection /></el-icon>
+              </template>
               {{ $t('network.renewIp') }}
-            </el-button>
-            <el-button type="warning" @click="resetNetwork">
-              <el-icon><Setting /></el-icon>
+            </AdminButton>
+            <AdminButton 
+              :action-name="$t('network.resetNetwork')"
+              type="warning" 
+              @click="resetNetwork"
+            >
+              <template #icon>
+                <el-icon><Setting /></el-icon>
+              </template>
               {{ $t('network.resetNetwork') }}
-            </el-button>
+            </AdminButton>
           </div>
         </el-card>
       </el-col>
@@ -95,11 +117,12 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { invoke } from '@tauri-apps/api/core'
 import { ElMessage } from 'element-plus'
 import { Refresh, SwitchButton, Connection, Setting } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
 import type { NetworkConnection } from '@/types'
+import { getNetworkConnections, getPortUsage, getDnsServers, flushDns as apiFlushDns, releaseIp as apiReleaseIp, renewIp as apiRenewIp, resetNetwork as apiResetNetwork } from '@/api/tauri'
+import AdminButton from '@/components/AdminButton.vue'
 
 const { t } = useI18n()
 const loadingConnections = ref(false)
@@ -111,8 +134,12 @@ const dnsServers = ref<string[]>([])
 async function loadConnections() {
   loadingConnections.value = true
   try {
-    const result = await invoke<NetworkConnection[]>('get_network_connections')
-    connections.value = result
+    const result = await getNetworkConnections()
+    if (result.success && result.data) {
+      connections.value = result.data
+    } else {
+      ElMessage.error(t('network.loadConnectionsFailed') + `: ${result.error}`)
+    }
   } catch (error) {
     ElMessage.error(t('network.loadConnectionsFailed') + `: ${error}`)
   } finally {
@@ -123,8 +150,17 @@ async function loadConnections() {
 async function loadPorts() {
   loadingPorts.value = true
   try {
-    const result = await invoke('get_port_usage') as Array<{ port: number; processName: string; pid: number; protocol: string }>
-    ports.value = result
+    const result = await getPortUsage(0)
+    if (result.success && result.data) {
+      ports.value = result.data.map(c => ({
+        port: c.localPort || 0,
+        processName: c.processName || '',
+        pid: c.pid || 0,
+        protocol: c.protocol || ''
+      }))
+    } else {
+      ElMessage.error(t('network.loadPortsFailed') + `: ${result.error}`)
+    }
   } catch (error) {
     ElMessage.error(t('network.loadPortsFailed') + `: ${error}`)
   } finally {
@@ -134,8 +170,12 @@ async function loadPorts() {
 
 async function loadDnsServers() {
   try {
-    const result = await invoke<string[]>('get_dns_servers')
-    dnsServers.value = result
+    const result = await getDnsServers()
+    if (result.success && result.data) {
+      dnsServers.value = result.data
+    } else {
+      console.error(t('network.loadDnsFailed') + `: ${result.error}`)
+    }
   } catch (error) {
     console.error(t('network.loadDnsFailed') + ':', error)
   }
@@ -143,8 +183,12 @@ async function loadDnsServers() {
 
 async function flushDns() {
   try {
-    await invoke('flush_dns')
-    ElMessage.success(t('network.flushDnsSuccess'))
+    const result = await apiFlushDns()
+    if (result.success) {
+      ElMessage.success(t('network.flushDnsSuccess'))
+    } else {
+      ElMessage.error(t('network.flushDnsFailed') + `: ${result.error}`)
+    }
   } catch (error) {
     ElMessage.error(t('network.flushDnsFailed') + `: ${error}`)
   }
@@ -152,8 +196,12 @@ async function flushDns() {
 
 async function releaseIp() {
   try {
-    await invoke('release_ip')
-    ElMessage.success(t('network.releaseIpSuccess'))
+    const result = await apiReleaseIp()
+    if (result.success) {
+      ElMessage.success(t('network.releaseIpSuccess'))
+    } else {
+      ElMessage.error(t('network.releaseIpFailed') + `: ${result.error}`)
+    }
   } catch (error) {
     ElMessage.error(t('network.releaseIpFailed') + `: ${error}`)
   }
@@ -161,8 +209,12 @@ async function releaseIp() {
 
 async function renewIp() {
   try {
-    await invoke('renew_ip')
-    ElMessage.success(t('network.renewIpSuccess'))
+    const result = await apiRenewIp()
+    if (result.success) {
+      ElMessage.success(t('network.renewIpSuccess'))
+    } else {
+      ElMessage.error(t('network.renewIpFailed') + `: ${result.error}`)
+    }
   } catch (error) {
     ElMessage.error(t('network.renewIpFailed') + `: ${error}`)
   }
@@ -170,8 +222,12 @@ async function renewIp() {
 
 async function resetNetwork() {
   try {
-    await invoke('reset_network')
-    ElMessage.success(t('network.resetNetworkSuccess'))
+    const result = await apiResetNetwork()
+    if (result.success) {
+      ElMessage.success(t('network.resetNetworkSuccess'))
+    } else {
+      ElMessage.error(t('network.resetNetworkFailed') + `: ${result.error}`)
+    }
   } catch (error) {
     ElMessage.error(t('network.resetNetworkFailed') + `: ${error}`)
   }

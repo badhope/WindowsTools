@@ -1,7 +1,6 @@
-use crate::{CommandResult, SystemInfo};
+use crate::{CommandResult, SystemInfo, utils};
 use std::process::Command;
 use std::env;
-use encoding_rs::GBK;
 
 pub fn get_system_info() -> Result<SystemInfo, String> {
     let os_name = "Windows".to_string();
@@ -25,6 +24,47 @@ pub fn get_system_info() -> Result<SystemInfo, String> {
     })
 }
 
+pub fn restart_as_admin() -> Result<(), String> {
+    let exe_path = env::current_exe()
+        .map_err(|e| format!("获取程序路径失败: {}", e))?;
+    
+    let exe_path_str = exe_path.to_string_lossy().to_string();
+    
+    let command = format!(
+        "Start-Process -FilePath '{}' -Verb RunAs",
+        exe_path_str
+    );
+
+    let output = Command::new("powershell")
+        .args([
+            "-NoProfile",
+            "-ExecutionPolicy", "Bypass",
+            "-Command",
+            &command
+        ])
+        .spawn()
+        .map_err(|e| format!("启动管理员进程失败: {}", e))?;
+
+    drop(output);
+    
+    Ok(())
+}
+
+pub fn is_admin() -> Result<bool, String> {
+    let output = Command::new("powershell")
+        .args([
+            "-NoProfile",
+            "-ExecutionPolicy", "Bypass",
+            "-Command",
+            "[Security.Principal.WindowsPrincipal]::new([Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)"
+        ])
+        .output()
+        .map_err(|e| format!("检查管理员权限失败: {}", e))?;
+
+    let result = utils::decode_output(&output.stdout);
+    Ok(result.trim().eq_ignore_ascii_case("True"))
+}
+
 fn get_computer_name() -> String {
     env::var("COMPUTERNAME").unwrap_or_else(|_| "Unknown".to_string())
 }
@@ -33,31 +73,18 @@ fn get_user_name() -> String {
     env::var("USERNAME").unwrap_or_else(|_| "Unknown".to_string())
 }
 
-fn decode_output(bytes: &[u8]) -> String {
-    let (decoded, _, had_errors) = GBK.decode(bytes);
-    if had_errors {
-        String::from_utf8_lossy(bytes).to_string()
-    } else {
-        decoded.to_string()
-    }
-}
-
 fn get_os_version() -> Result<String, String> {
     let output = Command::new("powershell")
         .args([
             "-NoProfile",
             "-ExecutionPolicy", "Bypass",
             "-Command",
-            "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; (Get-CimInstance Win32_OperatingSystem).Caption"
+            "(Get-WmiObject -Class Win32_OperatingSystem).Caption"
         ])
         .output()
-        .map_err(|e| format!("Failed to get OS version: {}", e))?;
+        .map_err(|e| format!("获取操作系统版本失败: {}", e))?;
 
-    let stdout = decode_output(&output.stdout).trim().to_string();
-    if stdout.is_empty() {
-        return Ok("Unknown".to_string());
-    }
-    Ok(stdout)
+    Ok(utils::decode_output(&output.stdout).trim().to_string())
 }
 
 fn get_os_build() -> Result<String, String> {
@@ -66,13 +93,12 @@ fn get_os_build() -> Result<String, String> {
             "-NoProfile",
             "-ExecutionPolicy", "Bypass",
             "-Command",
-            "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; (Get-CimInstance Win32_OperatingSystem).BuildNumber"
+            "(Get-WmiObject -Class Win32_OperatingSystem).BuildNumber"
         ])
         .output()
-        .map_err(|e| format!("Failed to get OS build: {}", e))?;
+        .map_err(|e| format!("获取操作系统版本失败: {}", e))?;
 
-    let stdout = decode_output(&output.stdout).trim().to_string();
-    Ok(stdout)
+    Ok(utils::decode_output(&output.stdout).trim().to_string())
 }
 
 fn get_cpu_info() -> Result<String, String> {
@@ -81,16 +107,12 @@ fn get_cpu_info() -> Result<String, String> {
             "-NoProfile",
             "-ExecutionPolicy", "Bypass",
             "-Command",
-            "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; (Get-CimInstance Win32_Processor).Name"
+            "(Get-WmiObject -Class Win32_Processor).Name"
         ])
         .output()
-        .map_err(|e| format!("Failed to get CPU info: {}", e))?;
+        .map_err(|e| format!("获取CPU信息失败: {}", e))?;
 
-    let stdout = decode_output(&output.stdout).trim().to_string();
-    if stdout.is_empty() {
-        return Ok("Unknown".to_string());
-    }
-    Ok(stdout)
+    Ok(utils::decode_output(&output.stdout).trim().to_string())
 }
 
 fn get_total_memory() -> Result<u64, String> {
@@ -99,74 +121,118 @@ fn get_total_memory() -> Result<u64, String> {
             "-NoProfile",
             "-ExecutionPolicy", "Bypass",
             "-Command",
-            "(Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory"
+            "(Get-WmiObject -Class Win32_ComputerSystem).TotalPhysicalMemory"
         ])
         .output()
-        .map_err(|e| format!("Failed to get total memory: {}", e))?;
+        .map_err(|e| format!("获取内存信息失败: {}", e))?;
 
-    let stdout = decode_output(&output.stdout).trim().to_string();
-    let memory: u64 = stdout.parse().unwrap_or(0);
-    Ok(memory)
+    let decoded = utils::decode_output(&output.stdout);
+    let result = decoded.trim();
+    result.parse::<u64>().map_err(|e| format!("解析内存大小失败: {}", e))
 }
 
 pub fn execute_powershell(command: &str) -> Result<CommandResult, String> {
-    let full_command = format!("[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; {}", command);
-    
     let output = Command::new("powershell")
-        .args(["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", &full_command])
+        .args([
+            "-NoProfile",
+            "-ExecutionPolicy", "Bypass",
+            "-Command",
+            command
+        ])
         .output()
-        .map_err(|e| format!("Failed to execute PowerShell: {}", e))?;
+        .map_err(|e| format!("执行PowerShell命令失败: {}", e))?;
 
-    let stdout = decode_output(&output.stdout);
-    let stderr = decode_output(&output.stderr);
     let exit_code = output.status.code().unwrap_or(-1);
 
     Ok(CommandResult {
+        output: utils::decode_output(&output.stdout),
+        error: utils::decode_output(&output.stderr),
         success: output.status.success(),
-        output: stdout,
-        error: stderr,
         exit_code,
     })
 }
 
 pub fn open_system_tool(command: &str) -> Result<(), String> {
-    Command::new("cmd")
-        .args(["/C", "start", command])
+    let output = Command::new("powershell")
+        .args([
+            "-NoProfile",
+            "-ExecutionPolicy", "Bypass",
+            "-Command",
+            &format!("Start-Process '{}'", command)
+        ])
         .spawn()
-        .map_err(|e| format!("Failed to open {}: {}", command, e))?;
+        .map_err(|e| format!("打开系统工具失败: {}", e))?;
+
+    drop(output);
     Ok(())
 }
 
 pub fn get_startup_items() -> Result<Vec<serde_json::Value>, String> {
-    let output = execute_powershell(
-        "Get-CimInstance Win32_StartupCommand | Select-Object Name, Command, Location | ConvertTo-Json"
-    )?;
+    let output = Command::new("powershell")
+        .args([
+            "-NoProfile",
+            "-ExecutionPolicy", "Bypass",
+            "-Command",
+            "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; Get-ItemProperty 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Run' | ForEach-Object { foreach($prop in $_.PSObject.Properties) { if($prop.Name -ne 'PSPath' -and $prop.Name -ne 'PSParentPath' -and $prop.Name -ne 'PSChildName' -and $prop.Name -ne 'PSDrive' -and $prop.Name -ne 'PSProvider') { @{name=$prop.Name;command=$prop.Value;location='HKCU:\\Run';enabled=$true} | ConvertTo-Json -Compress } } }"
+        ])
+        .output()
+        .map_err(|e| format!("获取启动项失败: {}", e))?;
 
-    if output.output.is_empty() || output.output.trim() == "null" {
-        return Ok(vec![]);
-    }
-
-    let items: Vec<serde_json::Value> = serde_json::from_str(&output.output)
-        .unwrap_or_else(|_| vec![]);
+    let output_str = utils::decode_output(&output.stdout);
+    
+    let items: Vec<serde_json::Value> = output_str
+        .lines()
+        .filter(|line| !line.trim().is_empty())
+        .filter_map(|line| serde_json::from_str(line).ok())
+        .collect();
 
     Ok(items)
 }
 
-pub fn toggle_startup_item(_name: &str, _enabled: bool) -> Result<(), String> {
+pub fn toggle_startup_item(name: &str, enabled: bool) -> Result<(), String> {
+    let output = Command::new("powershell")
+        .args([
+            "-NoProfile",
+            "-ExecutionPolicy", "Bypass",
+            "-Command",
+            &format!(
+                "if({}) {{ Set-ItemProperty 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Run' -Name '{}' -Value '' }} else {{ Remove-ItemProperty 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Run' -Name '{}' -ErrorAction SilentlyContinue }}",
+                enabled, name, name
+            )
+        ])
+        .output()
+        .map_err(|e| format!("修改启动项失败: {}", e))?;
+
+    if !output.status.success() {
+        let error = utils::decode_output(&output.stderr);
+        return Err(format!("修改启动项失败: {}", error));
+    }
+
     Ok(())
 }
 
 pub fn get_scheduled_tasks() -> Result<Vec<serde_json::Value>, String> {
-    let output = execute_powershell(
-        "Get-ScheduledTask | Where-Object {$_.State -ne 'Disabled'} | Select-Object TaskName, State, LastRunTime, NextRunTime | ConvertTo-Json"
-    )?;
+    let output = Command::new("powershell")
+        .args([
+            "-NoProfile",
+            "-ExecutionPolicy", "Bypass",
+            "-Command",
+            "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; Get-ScheduledTask | Select-Object TaskName,State,LastRunTime,NextRunTime | ConvertTo-Json -Compress"
+        ])
+        .output()
+        .map_err(|e| format!("获取计划任务失败: {}", e))?;
 
-    if output.output.is_empty() || output.output.trim() == "null" {
+    let output_str = utils::decode_output(&output.stdout);
+    
+    if output_str.trim().is_empty() {
         return Ok(vec![]);
     }
-
-    let tasks: Vec<serde_json::Value> = serde_json::from_str(&output.output)
-        .unwrap_or_else(|_| vec![]);
+    
+    let tasks: Vec<serde_json::Value> = serde_json::from_str(&output_str)
+        .unwrap_or_else(|e| {
+            println!("解析计划任务失败: {}", e);
+            vec![]
+        });
 
     Ok(tasks)
 }

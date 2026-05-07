@@ -135,3 +135,22 @@ export interface NotificationItem {
   timestamp: string
   read: boolean
 }
+
+export interface NetworkAdapter {
+  name: string
+  description: string
+  macAddress: string
+  status: string
+  speed: number
+  ipAddresses: string[]
+  gateway: string
+  dnsServers: string[]
+}
+
+export interface StartupItem {
+  name: string
+  command: string
+  location: string
+  enabled: boolean
+  publisher: string
+}

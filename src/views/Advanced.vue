@@ -20,10 +20,25 @@
           <el-table :data="envVariables" v-loading="loadingEnv" size="small" max-height="400">
             <el-table-column prop="name" :label="$t('advanced.varName')" width="200" show-overflow-tooltip />
             <el-table-column prop="value" :label="$t('registry.value')" show-overflow-tooltip />
-            <el-table-column :label="$t('common.edit')" width="120">
+            <el-table-column :label="$t('common.edit')" width="140">
               <template #default="{ row }">
-                <el-button text size="small" @click="editEnv(row)">{{ $t('common.edit') }}</el-button>
-                <el-button text size="small" type="danger" @click="deleteEnv(row)">{{ $t('common.delete') }}</el-button>
+                <AdminButton 
+                  :action-name="`${$t('common.edit')} ${row.name}`"
+                  text 
+                  size="small"
+                  @click="editEnv(row)"
+                >
+                  {{ $t('common.edit') }}
+                </AdminButton>
+                <AdminButton 
+                  :action-name="`${$t('common.delete')} ${row.name}`"
+                  text 
+                  size="small"
+                  type="danger"
+                  @click="deleteEnv(row)"
+                >
+                  {{ $t('common.delete') }}
+                </AdminButton>
               </template>
             </el-table-column>
           </el-table>
@@ -49,10 +64,25 @@
           <el-table :data="hostsEntries" v-loading="loadingHosts" size="small" max-height="400">
             <el-table-column prop="ip" :label="$t('advanced.ipAddress')" width="150" />
             <el-table-column prop="hostname" :label="$t('advanced.hostname')" show-overflow-tooltip />
-            <el-table-column :label="$t('common.edit')" width="120">
+            <el-table-column :label="$t('common.edit')" width="140">
               <template #default="{ row }">
-                <el-button text size="small" @click="editHost(row)">{{ $t('common.edit') }}</el-button>
-                <el-button text size="small" type="danger" @click="deleteHost(row)">{{ $t('common.delete') }}</el-button>
+                <AdminButton 
+                  :action-name="`${$t('common.edit')} ${row.hostname}`"
+                  text 
+                  size="small"
+                  @click="editHost(row)"
+                >
+                  {{ $t('common.edit') }}
+                </AdminButton>
+                <AdminButton 
+                  :action-name="`${$t('common.delete')} ${row.hostname}`"
+                  text 
+                  size="small"
+                  type="danger"
+                  @click="deleteHost(row)"
+                >
+                  {{ $t('common.delete') }}
+                </AdminButton>
               </template>
             </el-table-column>
           </el-table>
@@ -69,14 +99,26 @@
             </div>
           </template>
           <div class="system-tools">
-            <el-button type="primary" @click="runSfc">
-              <el-icon><DocumentChecked /></el-icon>
+            <AdminButton 
+              :action-name="$t('advanced.sfcScan')"
+              type="primary" 
+              @click="runSfc"
+            >
+              <template #icon>
+                <el-icon><DocumentChecked /></el-icon>
+              </template>
               {{ $t('advanced.sfcScan') }}
-            </el-button>
-            <el-button type="success" @click="runDism">
-              <el-icon><Tools /></el-icon>
+            </AdminButton>
+            <AdminButton 
+              :action-name="$t('advanced.dism')"
+              type="success" 
+              @click="runDism"
+            >
+              <template #icon>
+                <el-icon><Tools /></el-icon>
+              </template>
               {{ $t('advanced.dism') }}
-            </el-button>
+            </AdminButton>
             <el-button type="warning" @click="checkWindowsUpdate">
               <el-icon><Upload /></el-icon>
               {{ $t('advanced.checkUpdates') }}
@@ -130,6 +172,7 @@ import { invoke } from '@tauri-apps/api/core'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Refresh, DocumentChecked, Tools, Upload } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
+import AdminButton from '@/components/AdminButton.vue'
 
 const { t } = useI18n()
 const loadingEnv = ref(false)

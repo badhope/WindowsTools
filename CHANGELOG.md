@@ -133,5 +133,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-[1.1.0]: https://github.com/badhope/VisualSpider/releases/tag/v1.1.0
-[1.0.0]: https://github.com/badhope/VisualSpider/releases/tag/v1.0.0
+[1.1.0]: https://github.com/badhope/WindowsTools/releases/tag/v1.1.0
+[1.0.0]: https://github.com/badhope/WindowsTools/releases/tag/v1.0.0

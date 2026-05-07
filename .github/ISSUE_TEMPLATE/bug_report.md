@@ -1,45 +1,47 @@
 ---
-name: Bug Report
-about: Report a bug to help us improve
+name: Bug Report 🐛
+about: 报告一个错误来帮助我们改进项目
 title: '[Bug] '
 labels: bug
 assignees: ''
 ---
 
-## Bug Description
+## 🐛 Bug 描述
 
-A clear and concise description of what the bug is.
+请简洁清晰地描述这个 bug 是什么。
 
-## Steps to Reproduce
+## 🔄 重现步骤
 
-1. Go to '...'
-2. Click on '...'
-3. Scroll down to '...'
-4. See error
+请提供详细的步骤来重现这个问题：
 
-## Expected Behavior
+1. 进入 '...'
+2. 点击 '...'
+3. 滚动到 '...'
+4. 出现错误
 
-A clear and concise description of what you expected to happen.
+## ✅ 预期行为
 
-## Actual Behavior
+请描述你期望发生的事情。
 
-A clear and concise description of what actually happened.
+## ❌ 实际行为
 
-## Screenshots
+请描述实际发生的事情。
 
-If applicable, add screenshots to help explain your problem.
+## 📸 截图
 
-## Environment
+如果可以，请添加截图来帮助说明问题。
 
-- OS: Windows 10/11
-- VisualSpider Version: 
-- Node.js Version: 
-- Rust Version: 
+## 🖥️ 环境信息
 
-## Additional Context
+- **操作系统**: Windows 10/11
+- **应用版本**: 
+- **Node.js 版本**:
+- **Rust 版本**:
 
-Add any other context about the problem here.
+## 📝 额外信息
 
-## Logs
+在此添加关于问题的其他信息。
 
-If applicable, paste relevant log output here.
+## 📋 日志
+
+如果可以，请在此粘贴相关的日志输出。

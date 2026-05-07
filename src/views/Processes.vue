@@ -34,14 +34,17 @@
               </el-button>
             </el-button-group>
             
-            <el-button 
+            <AdminButton 
+              :action-name="$t('processes.batchEndProcessTitle')"
               type="danger" 
               :disabled="selectedProcesses.length === 0"
               @click="batchEndProcesses"
             >
-              <el-icon><Close /></el-icon>
+              <template #icon>
+                <el-icon><Close /></el-icon>
+              </template>
               {{ $t('processes.endSelected') }} ({{ selectedProcesses.length }})
-            </el-button>
+            </AdminButton>
           </div>
         </div>
       </template>
@@ -123,20 +126,35 @@
         </el-table-column>
         <el-table-column prop="threads" :label="$t('processes.threads')" width="70" sortable />
         <el-table-column prop="path" :label="$t('processes.path')" show-overflow-tooltip />
-        <el-table-column :label="$t('common.operation')" width="180" fixed="right">
+        <el-table-column :label="$t('common.operation')" width="200" fixed="right">
           <template #default="{ row }">
             <el-button text size="small" @click="showProcessDetail(row)">
               <el-icon><View /></el-icon>
               {{ $t('processes.detail') }}
             </el-button>
-            <el-button text size="small" @click="changePriority(row)">
-              <el-icon><Rank /></el-icon>
+            <AdminButton 
+              :action-name="`${$t('processes.changePriorityTitle')} ${row.name}`"
+              text 
+              size="small"
+              @click="changePriority(row)"
+            >
+              <template #icon>
+                <el-icon><Rank /></el-icon>
+              </template>
               {{ $t('processes.changePriority') }}
-            </el-button>
-            <el-button text size="small" type="danger" @click="endProcess(row)">
-              <el-icon><Close /></el-icon>
+            </AdminButton>
+            <AdminButton 
+              :action-name="`${$t('processes.end')} ${row.name}`"
+              text 
+              size="small"
+              type="danger"
+              @click="endProcess(row)"
+            >
+              <template #icon>
+                <el-icon><Close /></el-icon>
+              </template>
               {{ $t('processes.end') }}
-            </el-button>
+            </AdminButton>
           </template>
         </el-table-column>
       </el-table>
@@ -212,11 +230,12 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
-import { invoke } from '@tauri-apps/api/core'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Refresh, Timer, Close, View, Rank, FolderOpened, CopyDocument, WarnTriangleFilled } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
 import type { ProcessInfo } from '@/types'
+import { getProcesses as apiGetProcesses, endProcess as apiEndProcess, setProcessPriority as apiSetProcessPriority, openFileLocation as apiOpenFileLocation } from '@/api/tauri'
+import AdminButton from '@/components/AdminButton.vue'
 
 interface ExtendedProcessInfo extends ProcessInfo {
   isSystem?: boolean
@@ -323,11 +342,15 @@ function getPriorityType(priority: string): string {
 async function loadProcesses() {
   loading.value = true
   try {
-    const result = await invoke<ExtendedProcessInfo[]>('get_processes')
-    processes.value = result.map(p => ({
-      ...p,
-      isSystem: p.user === 'SYSTEM' || p.user === 'LOCAL SERVICE' || p.user === 'NETWORK SERVICE'
-    }))
+    const result = await apiGetProcesses()
+    if (result.success && result.data) {
+      processes.value = result.data.map(p => ({
+        ...p,
+        isSystem: p.user === 'SYSTEM' || p.user === 'LOCAL SERVICE' || p.user === 'NETWORK SERVICE'
+      }))
+    } else {
+      ElMessage.error(t('processes.loadFailed') + `: ${result.error}`)
+    }
   } catch (error) {
     ElMessage.error(t('processes.loadFailed') + `: ${error}`)
   } finally {
@@ -383,13 +406,14 @@ async function savePriority() {
   if (!selectedProcess.value) return
   
   try {
-    await invoke('set_process_priority', {
-      pid: selectedProcess.value.pid,
-      priority: newPriority.value
-    })
-    ElMessage.success(t('processes.priorityChanged'))
-    priorityDialogVisible.value = false
-    await loadProcesses()
+    const result = await apiSetProcessPriority(selectedProcess.value.pid, newPriority.value)
+    if (result.success) {
+      ElMessage.success(t('processes.priorityChanged'))
+      priorityDialogVisible.value = false
+      await loadProcesses()
+    } else {
+      ElMessage.error(t('processes.priorityChangeFailed') + `: ${result.error}`)
+    }
   } catch (error) {
     ElMessage.error(t('processes.priorityChangeFailed') + `: ${error}`)
   }
@@ -408,9 +432,13 @@ async function endProcess(process: ExtendedProcessInfo) {
       }
     )
     
-    await invoke('end_process', { pid: process.pid })
-    ElMessage.success(t('processes.endProcessSuccess', { name: process.name }))
-    await loadProcesses()
+    const result = await apiEndProcess(process.pid)
+    if (result.success) {
+      ElMessage.success(t('processes.endProcessSuccess', { name: process.name }))
+      await loadProcesses()
+    } else {
+      ElMessage.error(t('processes.endProcessFailed') + `: ${result.error}`)
+    }
   } catch (error) {
     if (error !== 'cancel') {
       ElMessage.error(t('processes.endProcessFailed') + `: ${error}`)
@@ -437,10 +465,10 @@ async function batchEndProcesses() {
     let failed = 0
     
     for (const process of selectedProcesses.value) {
-      try {
-        await invoke('end_process', { pid: process.pid })
+      const result = await apiEndProcess(process.pid)
+      if (result.success) {
         success++
-      } catch {
+      } else {
         failed++
       }
     }
@@ -467,7 +495,10 @@ async function openFileLocation(path: string) {
   }
   
   try {
-    await invoke('open_file_location', { path })
+    const result = await apiOpenFileLocation(path)
+    if (!result.success) {
+      ElMessage.error(t('processes.openFileLocationFailed') + `: ${result.error}`)
+    }
   } catch (error) {
     ElMessage.error(t('processes.openFileLocationFailed') + `: ${error}`)
   }

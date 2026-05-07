@@ -1,9 +1,9 @@
 {
-  "name": "visual-spider",
+  "name": "windows-tools",
   "private": false,
   "version": "1.1.0",
   "type": "module",
-  "description": "VisualSpider - A powerful Windows system management tool with modern UI, built with Tauri 2.0, Vue 3, and Rust",
+  "description": "WindowsTools - A powerful Windows system management tool with modern UI, built with Tauri 2.0, Vue 3, and Rust",
   "author": {
     "name": "badhope",
     "email": "badhope@users.noreply.github.com",
@@ -12,12 +12,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/badhope/VisualSpider.git"
+    "url": "https://github.com/badhope/WindowsTools.git"
   },
   "bugs": {
-    "url": "https://github.com/badhope/VisualSpider/issues"
+    "url": "https://github.com/badhope/WindowsTools/issues"
   },
-  "homepage": "https://github.com/badhope/VisualSpider#readme",
+  "homepage": "https://github.com/badhope/WindowsTools#readme",
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",

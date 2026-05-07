@@ -1,22 +1,14 @@
-use crate::RegistryValue;
+use crate::{RegistryValue, utils};
 use winreg::RegKey;
 use winreg::enums::*;
-use encoding_rs::GBK;
-
-fn decode_output(bytes: &[u8]) -> String {
-    let (decoded, _, had_errors) = GBK.decode(bytes);
-    if had_errors {
-        String::from_utf8_lossy(bytes).to_string()
-    } else {
-        decoded.to_string()
-    }
-}
+use std::process::Command;
 
 pub fn get_registry_tree() -> Result<Vec<serde_json::Value>, String> {
     let roots = vec![
         ("HKEY_CLASSES_ROOT", HKEY_CLASSES_ROOT),
         ("HKEY_CURRENT_USER", HKEY_CURRENT_USER),
-        ("HKEY_LOCAL_MACHINE", HKEY_LOCAL_MACHINE),
+        ("HKEY_LOCAL_MACHINE\\SOFTWARE", HKEY_LOCAL_MACHINE),
+        ("HKEY_LOCAL_MACHINE\\SYSTEM", HKEY_LOCAL_MACHINE),
         ("HKEY_USERS", HKEY_USERS),
         ("HKEY_CURRENT_CONFIG", HKEY_CURRENT_CONFIG),
     ];
@@ -25,35 +17,81 @@ pub fn get_registry_tree() -> Result<Vec<serde_json::Value>, String> {
     
     for (name, hkey) in roots {
         let key = RegKey::predef(hkey);
-        let children = get_subkeys(&key, name);
+        let path = if name.contains('\\') {
+            name.split('\\').nth(1).unwrap_or("")
+        } else {
+            ""
+        };
+        
+        let children = if path.is_empty() {
+            get_subkeys_shallow(&key, name)
+        } else {
+            match key.open_subkey(path) {
+                Ok(subkey) => get_subkeys_shallow(&subkey, name),
+                Err(_) => Vec::new()
+            }
+        };
         
         tree.push(serde_json::json!({
             "name": name,
             "path": name,
-            "isRoot": true,
-            "children": children
+            "isRoot": !name.contains('\\'),
+            "requiresAdmin": name.starts_with("HKEY_LOCAL_MACHINE"),
+            "children": children,
+            "hasChildren": !children.is_empty()
         }));
     }
 
     Ok(tree)
 }
 
-fn get_subkeys(key: &RegKey, path: &str) -> Vec<serde_json::Value> {
+fn get_subkeys_shallow(key: &RegKey, path: &str) -> Vec<serde_json::Value> {
     let mut children = Vec::new();
     
     for subkey in key.enum_keys().filter_map(|k| k.ok()).take(50) {
         let child_path = format!("{}\\{}", path, subkey);
-        if let Ok(child_key) = key.open_subkey(&subkey) {
-            let sub_children = get_subkeys(&child_key, &child_path);
-            children.push(serde_json::json!({
-                "name": subkey,
-                "path": child_path,
-                "children": sub_children
-            }));
-        }
+        let has_children = check_has_children(key, &subkey);
+        
+        children.push(serde_json::json!({
+            "name": subkey,
+            "path": child_path,
+            "requiresAdmin": child_path.starts_with("HKEY_LOCAL_MACHINE"),
+            "hasChildren": has_children
+        }));
     }
 
     children
+}
+
+fn check_has_children(parent: &RegKey, name: &str) -> bool {
+    match parent.open_subkey(name) {
+        Ok(child_key) => child_key.enum_keys().next().is_some(),
+        Err(_) => false,
+    }
+}
+
+pub fn get_registry_subkeys(path: &str) -> Result<Vec<serde_json::Value>, String> {
+    let (hkey, subpath) = parse_registry_path(path)?;
+    let key = RegKey::predef(hkey);
+    
+    let key = key.open_subkey_with_flags(subpath, KEY_READ)
+        .map_err(|e| format!("打开注册表项失败: {} (可能需要管理员权限)", e))?;
+
+    let mut children = Vec::new();
+    
+    for subkey in key.enum_keys().filter_map(|k| k.ok()).take(100) {
+        let child_path = format!("{}\\{}", path, subkey);
+        let has_children = check_has_children(&key, &subkey);
+        
+        children.push(serde_json::json!({
+            "name": subkey,
+            "path": child_path,
+            "requiresAdmin": child_path.starts_with("HKEY_LOCAL_MACHINE"),
+            "hasChildren": has_children
+        }));
+    }
+
+    Ok(children)
 }
 
 pub fn get_registry_values(path: &str) -> Result<Vec<RegistryValue>, String> {
@@ -61,7 +99,7 @@ pub fn get_registry_values(path: &str) -> Result<Vec<RegistryValue>, String> {
     let key = RegKey::predef(hkey);
     
     let key = key.open_subkey_with_flags(subpath, KEY_READ)
-        .map_err(|e| format!("Failed to open registry key: {}", e))?;
+        .map_err(|e| format!("打开注册表项失败: {} (可能需要管理员权限)", e))?;
 
     let mut values = Vec::new();
 
@@ -112,6 +150,22 @@ pub fn get_registry_values(path: &str) -> Result<Vec<RegistryValue>, String> {
                             "0".to_string()
                         }
                     }
+                    REG_MULTI_SZ => {
+                        let strings: Vec<String> = bytes.chunks(2)
+                            .map(|chunk| {
+                                if chunk.len() == 2 {
+                                    u16::from_le_bytes([chunk[0], chunk[1]])
+                                } else {
+                                    0
+                                }
+                            })
+                            .collect::<Vec<u16>>()
+                            .split(|&c| c == 0)
+                            .filter(|s| !s.is_empty())
+                            .map(|s| String::from_utf16_lossy(s))
+                            .collect();
+                        strings.join("; ")
+                    }
                     _ => format!("{:?}", bytes),
                 };
 
@@ -131,29 +185,51 @@ pub fn get_registry_values(path: &str) -> Result<Vec<RegistryValue>, String> {
 
 pub fn set_registry_value(path: &str, name: &str, value_type: &str, value: &str) -> Result<(), String> {
     let (hkey, subpath) = parse_registry_path(path)?;
+    
+    if subpath.starts_with("SOFTWARE\\") || subpath.starts_with("SYSTEM\\") {
+        return Err(format!(
+            "修改 '{}' 需要管理员权限。\n\n提示：\n1. 右键点击程序图标，选择'以管理员身份运行'\n2. 或使用PowerShell命令手动修改：reg add \"{}\" /v \"{}\" /t {} /d \"{}\" /f",
+            path, path, name, value_type, value
+        ));
+    }
+    
     let key = RegKey::predef(hkey);
     
     let key = key.open_subkey_with_flags(subpath, KEY_SET_VALUE)
-        .map_err(|e| format!("Failed to open registry key: {}", e))?;
+        .map_err(|e| format!("打开注册表项失败: {} (可能需要管理员权限)", e))?;
 
     match value_type {
-        "REG_SZ" => {
+        "REG_SZ" | "REG_EXPAND_SZ" => {
             key.set_value(name, &value)
-                .map_err(|e| format!("Failed to set value: {}", e))?;
+                .map_err(|e| format!("设置值失败: {} (可能需要管理员权限)", e))?;
         }
         "REG_DWORD" => {
             let val: u32 = value.parse().unwrap_or(0);
             key.set_value(name, &val)
-                .map_err(|e| format!("Failed to set value: {}", e))?;
+                .map_err(|e| format!("设置值失败: {} (可能需要管理员权限)", e))?;
         }
         "REG_QWORD" => {
             let val: u64 = value.parse().unwrap_or(0);
             key.set_value(name, &val)
-                .map_err(|e| format!("Failed to set value: {}", e))?;
+                .map_err(|e| format!("设置值失败: {} (可能需要管理员权限)", e))?;
+        }
+        "REG_MULTI_SZ" => {
+            let strings: Vec<&str> = value.split(';').map(|s| s.trim()).filter(|s| !s.is_empty()).collect();
+            key.set_value(name, &strings)
+                .map_err(|e| format!("设置值失败: {} (可能需要管理员权限)", e))?;
+        }
+        "REG_BINARY" => {
+            let bytes: Vec<u8> = value.split_whitespace()
+                .filter_map(|s| u8::from_str_radix(s, 16).ok())
+                .collect();
+            key.set_raw_value(name, &winreg::RegValue {
+                bytes,
+                vtype: REG_BINARY
+            }).map_err(|e| format!("设置值失败: {}", e))?;
         }
         _ => {
             key.set_value(name, &value)
-                .map_err(|e| format!("Failed to set value: {}", e))?;
+                .map_err(|e| format!("设置值失败: {} (可能需要管理员权限)", e))?;
         }
     }
 
@@ -166,57 +242,100 @@ pub fn create_registry_value(path: &str, name: &str, value_type: &str, value: &s
 
 pub fn delete_registry_value(path: &str, name: &str) -> Result<(), String> {
     let (hkey, subpath) = parse_registry_path(path)?;
+    
+    if subpath.starts_with("SOFTWARE\\") || subpath.starts_with("SYSTEM\\") {
+        return Err(format!(
+            "删除 '{}' 下的 '{}' 需要管理员权限。\n\n提示：请以管理员身份运行程序，或使用命令提示符手动删除。",
+            path, name
+        ));
+    }
+    
     let key = RegKey::predef(hkey);
     
     let key = key.open_subkey_with_flags(subpath, KEY_SET_VALUE)
-        .map_err(|e| format!("Failed to open registry key: {}", e))?;
+        .map_err(|e| format!("打开注册表项失败: {} (可能需要管理员权限)", e))?;
 
     key.delete_value(name)
-        .map_err(|e| format!("Failed to delete value: {}", e))?;
+        .map_err(|e| format!("删除值失败: {} (可能需要管理员权限)", e))?;
 
     Ok(())
 }
 
 pub fn export_registry_key(path: &str) -> Result<String, String> {
-    let output = std::process::Command::new("reg")
-        .args(["export", path])
+    let output = std::process::Command::new("powershell")
+        .args([
+            "-NoProfile",
+            "-ExecutionPolicy", "Bypass",
+            "-Command",
+            &format!(
+                "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; reg export \"{}\" - 2>&1",
+                path
+            )
+        ])
         .output()
-        .map_err(|e| format!("Failed to export registry: {}", e))?;
+        .map_err(|e| format!("导出注册表失败: {}", e))?;
 
-    Ok(decode_output(&output.stdout))
+    if !output.status.success() {
+        let error = utils::decode_output(&output.stderr);
+        return Err(format!("导出失败: {}", error));
+    }
+
+    Ok(utils::decode_output(&output.stdout))
 }
 
-pub fn get_registry_subkeys(path: &str) -> Result<Vec<serde_json::Value>, String> {
+pub fn create_registry_key(path: &str, name: &str) -> Result<(), String> {
     let (hkey, subpath) = parse_registry_path(path)?;
     let key = RegKey::predef(hkey);
     
-    let key = key.open_subkey_with_flags(subpath, KEY_READ)
-        .map_err(|e| format!("Failed to open registry key: {}", e))?;
-
-    let mut children = Vec::new();
+    let parent_key = key.open_subkey_with_flags(subpath, KEY_CREATE_SUB_KEY)
+        .map_err(|e| format!("无法创建注册表项: {} (可能需要管理员权限)", e))?;
     
-    for subkey in key.enum_keys().filter_map(|k| k.ok()).take(100) {
-        let child_path = format!("{}\\{}", path, subkey);
-        children.push(serde_json::json!({
-            "name": subkey,
-            "path": child_path
-        }));
-    }
+    parent_key.create_subkey(name)
+        .map_err(|e| format!("创建注册表项失败: {}", e))?;
+    
+    Ok(())
+}
 
-    Ok(children)
+pub fn delete_registry_key(path: &str) -> Result<(), String> {
+    let (hkey, subpath) = parse_registry_path(path)?;
+    
+    let parts: Vec<&str> = subpath.rsplitn(2, '\\').collect();
+    if parts.len() != 2 {
+        return Err("无效的注册表路径".to_string());
+    }
+    
+    let (parent_path, key_name) = (parts[1], parts[0]);
+    
+    if parent_path.starts_with("SOFTWARE") || parent_path.starts_with("SYSTEM") || 
+       parent_path.starts_with("HARDWARE") {
+        return Err(format!(
+            "删除 '{}' 需要管理员权限。\n\n提示：请以管理员身份运行程序。",
+            path
+        ));
+    }
+    
+    let key = RegKey::predef(hkey);
+    
+    let parent_key = key.open_subkey_with_flags(parent_path, KEY_WRITE)
+        .map_err(|e| format!("无法打开父注册表项: {}", e))?;
+    
+    parent_key.delete_subkey_all(key_name)
+        .map_err(|e| format!("删除注册表项失败: {}", e))?;
+    
+    Ok(())
 }
 
 fn parse_registry_path(path: &str) -> Result<(isize, &str), String> {
     let (root, subpath) = path.split_once('\\')
-        .ok_or_else(|| "Invalid registry path".to_string())?;
+        .ok_or_else(|| format!("无效的注册表路径: {}", path))?;
 
     let hkey = match root {
-        "HKEY_CLASSES_ROOT" => HKEY_CLASSES_ROOT,
-        "HKEY_CURRENT_USER" => HKEY_CURRENT_USER,
-        "HKEY_LOCAL_MACHINE" => HKEY_LOCAL_MACHINE,
-        "HKEY_USERS" => HKEY_USERS,
-        "HKEY_CURRENT_CONFIG" => HKEY_CURRENT_CONFIG,
-        _ => return Err(format!("Unknown registry root: {}", root)),
+        "HKEY_CLASSES_ROOT" | "HKCR" => HKEY_CLASSES_ROOT,
+        "HKEY_CURRENT_USER" | "HKCU" => HKEY_CURRENT_USER,
+        "HKEY_LOCAL_MACHINE" | "HKLM" => HKEY_LOCAL_MACHINE,
+        "HKEY_USERS" | "HKU" => HKEY_USERS,
+        "HKEY_CURRENT_CONFIG" | "HKCC" => HKEY_CURRENT_CONFIG,
+        _ => return Err(format!("未知的注册表根项: {}", root)),
     };
 
     Ok((hkey, subpath))

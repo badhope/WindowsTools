@@ -38,32 +38,35 @@
             <el-tag type="info">{{ $t(`services.${row.startType.toLowerCase()}`) }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column :label="$t('common.edit')" width="200" fixed="right">
+        <el-table-column :label="$t('common.edit')" width="260" fixed="right">
           <template #default="{ row }">
-            <el-button 
+            <AdminButton 
               v-if="row.status !== 'Running'" 
+              :action-name="`${$t('services.start')} ${row.displayName}`"
               type="success" 
               size="small"
               @click="controlService(row.name, 'start')"
             >
               {{ $t('services.start') }}
-            </el-button>
-            <el-button 
+            </AdminButton>
+            <AdminButton 
               v-if="row.status === 'Running' && row.canStop" 
+              :action-name="`${$t('services.stop')} ${row.displayName}`"
               type="warning" 
               size="small"
               @click="controlService(row.name, 'stop')"
             >
               {{ $t('services.stop') }}
-            </el-button>
-            <el-button 
+            </AdminButton>
+            <AdminButton 
               v-if="row.status === 'Running'" 
+              :action-name="`${$t('services.restart')} ${row.displayName}`"
               type="primary" 
               size="small"
               @click="controlService(row.name, 'restart')"
             >
               {{ $t('services.restart') }}
-            </el-button>
+            </AdminButton>
           </template>
         </el-table-column>
       </el-table>
@@ -73,11 +76,12 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { invoke } from '@tauri-apps/api/core'
 import { ElMessage } from 'element-plus'
 import { Search, Refresh } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
 import type { SystemService } from '@/types'
+import { getServices, serviceStart, serviceStop, serviceRestart } from '@/api/tauri'
+import AdminButton from '@/components/AdminButton.vue'
 
 const { t } = useI18n()
 const loading = ref(false)
@@ -105,8 +109,12 @@ function getStatusType(status: string) {
 async function loadServices() {
   loading.value = true
   try {
-    const result = await invoke<SystemService[]>('get_services')
-    services.value = result
+    const result = await getServices()
+    if (result.success && result.data) {
+      services.value = result.data
+    } else {
+      ElMessage.error(t('services.loadFailed') + `: ${result.error}`)
+    }
   } catch (error) {
     ElMessage.error(t('services.loadFailed') + `: ${error}`)
   } finally {
@@ -116,14 +124,24 @@ async function loadServices() {
 
 async function controlService(name: string, action: 'start' | 'stop' | 'restart') {
   try {
-    await invoke(`service_${action}`, { name })
+    const actions = {
+      start: serviceStart,
+      stop: serviceStop,
+      restart: serviceRestart
+    }
     const messages = {
       start: t('services.startSuccess'),
       stop: t('services.stopSuccess'),
       restart: t('services.restartSuccess')
     }
-    ElMessage.success(messages[action])
-    await loadServices()
+    
+    const result = await actions[action](name)
+    if (result.success) {
+      ElMessage.success(messages[action])
+      await loadServices()
+    } else {
+      ElMessage.error(t('services.operationFailed') + `: ${result.error}`)
+    }
   } catch (error) {
     ElMessage.error(t('services.operationFailed') + `: ${error}`)
   }

@@ -7,6 +7,8 @@ mod process;
 mod service;
 mod network;
 mod disk;
+mod utils;
+mod helpers;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -90,9 +92,32 @@ pub struct DiskInfo {
     pub drive_type: String,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NetworkAdapter {
+    pub name: String,
+    pub description: String,
+    pub mac_address: String,
+    pub status: String,
+    pub speed: i64,
+    pub ip_addresses: Vec<String>,
+    pub gateway: String,
+    pub dns_servers: Vec<String>,
+}
+
 #[command]
 fn get_system_info() -> Result<SystemInfo, String> {
     system::get_system_info()
+}
+
+#[command]
+fn is_admin() -> Result<bool, String> {
+    system::is_admin()
+}
+
+#[command]
+fn restart_as_admin() -> Result<(), String> {
+    system::restart_as_admin()
 }
 
 #[command]
@@ -196,22 +221,22 @@ fn get_dns_servers() -> Result<Vec<String>, String> {
 }
 
 #[command]
-fn flush_dns() -> Result<(), String> {
+fn flush_dns() -> Result<String, String> {
     network::flush_dns()
 }
 
 #[command]
-fn release_ip() -> Result<(), String> {
+fn release_ip() -> Result<String, String> {
     network::release_ip()
 }
 
 #[command]
-fn renew_ip() -> Result<(), String> {
+fn renew_ip() -> Result<String, String> {
     network::renew_ip()
 }
 
 #[command]
-fn reset_network() -> Result<(), String> {
+fn reset_network() -> Result<String, String> {
     network::reset_network()
 }
 
@@ -221,12 +246,12 @@ fn get_disk_info() -> Result<Vec<DiskInfo>, String> {
 }
 
 #[command]
-fn cleanup_disk(drive: String) -> Result<(), String> {
+fn cleanup_disk(drive: String) -> Result<String, String> {
     disk::cleanup_disk(&drive)
 }
 
 #[command]
-fn check_disk(drive: String) -> Result<(), String> {
+fn check_disk(drive: String) -> Result<String, String> {
     disk::check_disk(&drive)
 }
 
@@ -324,6 +349,8 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .invoke_handler(tauri::generate_handler![
             get_system_info,
+            is_admin,
+            restart_as_admin,
             execute_powershell,
             open_system_tool,
             get_registry_tree,
