@@ -1,128 +1,126 @@
-# 贡献指南
+# Contributing to WindowsTools
 
-首先，感谢你考虑为 WindowsTools 做出贡献！正是像你这样的贡献者才让这个项目变得更好。
+First of all, thank you for considering contributing to WindowsTools! It's contributors like you who make this project better.
 
-## 行为准则
+## Code of Conduct
 
-本项目和所有参与者都受我们的行为准则约束。参与本项目即表示你同意遵守该准则。
+This project and all participants are governed by our Code of Conduct. By participating, you agree to uphold this code.
 
-## 如何贡献
+## How to Contribute
 
-### 报告问题
+### Reporting Issues
 
-在创建问题报告之前，请先检查现有的 issue 列表，确认该问题尚未被报告。创建问题报告时，请包含以下信息：
+Before creating an issue, please check the existing issue list to make sure the problem hasn't already been reported. When creating an issue, please include:
 
-- 使用清晰且描述性的标题
-- 描述重现问题的具体步骤
-- 提供能够展示这些步骤的具体示例
-- 描述你观察到的行为以及你期望的行为
-- 如果有帮助，请附上截图
-- 包含你的环境详细信息
+- A clear and descriptive title
+- Detailed steps to reproduce the problem
+- Specific examples that demonstrate these steps
+- A description of the observed behavior and what you expected
+- Screenshots if helpful
+- Your environment details
 
-**问题报告模板**：
+**Issue Report Template:**
 
 ```markdown
-## 问题描述
-[清楚描述问题]
+## Bug Description
+[Clear description of the issue]
 
-## 重现步骤
-1. [步骤1]
-2. [步骤2]
-3. [步骤3]
+## Steps to Reproduce
+1. [Step 1]
+2. [Step 2]
+3. [Step 3]
 
-## 预期行为
-[你期望发生什么]
+## Expected Behavior
+[What you expected to happen]
 
-## 实际行为
-[实际发生了什么]
+## Actual Behavior
+[What actually happened]
 
-## 环境信息
-- Windows 版本：
-- 应用版本：
-- 其他相关信息：
+## Environment
+- Windows Version:
+- App Version:
+- Other relevant info:
 ```
 
-### 建议改进
+### Feature Suggestions
 
-改进建议通过 GitHub Issues 进行跟踪。创建改进建议时，请包含：
+Feature suggestions are tracked through GitHub Issues. When creating a suggestion, please include:
 
-- 使用清晰且描述性的标题
-- 提供建议改进的分步描述
-- 提供能够展示这些步骤的具体示例
-- 描述当前行为以及你期望的行为
-- 解释为什么这个改进会对你有帮助
+- A clear and descriptive title
+- A detailed step-by-step description of the suggested improvement
+- Specific examples that demonstrate these steps
+- A description of the current behavior and what you expected
+- Explain why this improvement would be helpful to you
 
-### 拉取请求（Pull Requests）
+### Pull Requests
 
-- 填写所需的模板
-- 不要在 PR 标题中包含 issue 编号
-- 遵循代码风格指南
-- 包含经过深思熟虑、结构良好的测试
-- 为新代码添加文档
-- 所有文件末尾添加空行
+- Fill in the required template
+- Do not include issue numbers in the PR title
+- Follow the code style guidelines
+- Include well-considered, well-structured tests
+- Document new code
+- Add a blank line at the end of all files
 
-## 开发设置
+## Development Setup
 
-### 环境要求
+### Requirements
 
-| 依赖 | 版本要求 | 说明 |
-|:----:|:--------:|:----:|
-| Node.js | ≥ 18.0.0 | 前端运行环境 |
-| Rust | ≥ 1.75.0 | Tauri 后端编译 |
-| Windows | 10/11 | 操作系统 |
-| Visual Studio Build Tools | 最新版 | Windows 原生编译 |
-| WebView2 | 最新版 | 应用界面渲染 |
+| Dependency | Version | Description |
+|:-----------|:-------:|:------------|
+| Node.js | ≥ 18.0.0 | Frontend runtime |
+| Rust | ≥ 1.75.0 | Tauri backend compilation |
+| Windows | 10/11 | Operating system |
+| Visual Studio Build Tools | Latest | Windows native compilation |
+| WebView2 | Latest | Application rendering |
 
-### 设置步骤
+### Setup Steps
 
 ```bash
-# 1. 克隆仓库
+# 1. Clone the repository
 git clone https://github.com/badhope/WindowsTools.git
 cd WindowsTools
 
-# 2. 安装依赖
+# 2. Install dependencies
 npm install
 
-# 3. 确保 Rust 环境已安装
-# 如果没有安装，运行：
+# 3. Ensure Rust is installed
+# If not installed, run:
 rustup default stable
 
-# 4. 启动开发服务器
+# 4. Start development server
 npm run tauri dev
 ```
 
-### 代码风格
+### Code Style
 
-我们使用以下工具来保持代码风格一致：
+We use the following tools to maintain consistent code style:
 
-- **ESLint** - JavaScript/TypeScript 代码检查
-- **Prettier** - 代码格式化
-- **TypeScript** - 类型检查
+- **ESLint** - JavaScript/TypeScript linting
+- **Prettier** - Code formatting
+- **TypeScript** - Type checking
 
-**常用命令**：
+**Common Commands:**
 
 ```bash
-# 代码检查
-npm run lint              # ESLint 检查并尝试修复
-npm run lint:check        # 仅检查不修复
+# Linting
+npm run lint              # ESLint check and fix
+npm run lint:check        # Check only
 
-# 代码格式化
-npm run format            # Prettier 格式化
-npm run format:check      # 检查格式
+# Formatting
+npm run format            # Prettier format
+npm run format:check       # Check formatting
 
-# 类型检查
-npm run typecheck         # TypeScript 类型检查
+# Type checking
+npm run typecheck         # TypeScript type check
 
-# 构建
-npm run build             # 构建前端
-npm run tauri build       # 构建桌面应用
+# Building
+npm run build             # Build frontend
+npm run tauri build       # Build desktop app
 ```
 
-## 提交规范
+## Commit Convention
 
-### 提交信息格式
-
-我们遵循 [Conventional Commits](https://www.conventionalcommits.org/) 规范：
+We follow the [Conventional Commits](https://www.conventionalcommits.org/) specification:
 
 ```
 <type>(<scope>): <subject>
@@ -132,78 +130,78 @@ npm run tauri build       # 构建桌面应用
 <footer>
 ```
 
-### 类型（Type）
+### Types
 
-- `feat` - 新功能
-- `fix` - 错误修复
-- `docs` - 文档变更
-- `style` - 代码格式（不影响功能）
-- `refactor` - 重构（既不修复也不添加功能）
-- `perf` - 性能改进
-- `test` - 添加测试
-- `chore` - 构建过程或辅助工具的变更
+- `feat` - New feature
+- `fix` - Bug fix
+- `docs` - Documentation changes
+- `style` - Code formatting (no functional changes)
+- `refactor` - Refactoring (neither fixes nor adds features)
+- `perf` - Performance improvements
+- `test` - Adding tests
+- `chore` - Build process or auxiliary tool changes
 
-### 示例
+### Examples
 
 ```bash
-# 新功能
-git commit -m "feat(process): 添加按名称结束进程功能"
+# New feature
+git commit -m "feat(process): add end process by name feature"
 
-# 错误修复
-git commit -m "fix(network): 修复DNS刷新失败的bug"
+# Bug fix
+git commit -m "fix(network): fix DNS flush failure"
 
-# 文档更新
-git commit -m "docs(readme): 更新安装说明"
+# Documentation
+git commit -m "docs(readme): update installation instructions"
 
-# 重构
-git commit -m "refactor(service): 重构服务管理模块代码"
+# Refactoring
+git commit -m "refactor(service): refactor service management module"
 ```
 
-## 分支管理
+## Branch Management
 
-- `main` - 主分支，稳定版本
-- `develop` - 开发分支，包含最新功能
-- `feature/*` - 功能分支
-- `fix/*` - 修复分支
-- `hotfix/*` - 紧急修复分支
+- `main` - Main branch, stable version
+- `develop` - Development branch, latest features
+- `feature/*` - Feature branches
+- `fix/*` - Fix branches
+- `hotfix/*` - Emergency fix branches
 
-### 创建功能分支
+### Creating a Feature Branch
 
 ```bash
-# 1. 确保在最新主分支上
+# 1. Ensure you're on the latest main branch
 git checkout main
 git pull origin main
 
-# 2. 创建新分支
+# 2. Create a new branch
 git checkout -b feature/your-feature-name
 
-# 3. 进行开发
-# ... 编辑代码 ...
+# 3. Develop
+# ... Edit code ...
 
-# 4. 提交更改
+# 4. Commit changes
 git add .
 git commit -m "feat(scope): your feature description"
 
-# 5. 推送分支
+# 5. Push the branch
 git push origin feature/your-feature-name
 
-# 6. 创建 Pull Request
+# 6. Create Pull Request
 ```
 
-## 测试
+## Testing
 
-在提交代码之前，请确保：
+Before submitting code, please ensure:
 
 ```bash
-# 运行所有检查
+# Run all checks
 npm run lint
 npm run typecheck
 npm run test
 
-# 构建测试
+# Build test
 npm run tauri build
 ```
 
-## 许可证
+## License
 
-通过贡献代码，你同意你的贡献将基于 MIT 许可证授权。
+By contributing code, you agree that your contribution will be licensed under the MIT License.
