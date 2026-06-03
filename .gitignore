@@ -59,6 +59,14 @@ nul
 *.lcov
 junit*.xml
 
+# Dogfood / local Playwright artefacts (kept out of VCS)
+dogfood-output/
+*.png
+!docs/**/*.png
+!ui/src/assets/**/*.png
+!crates/*/icons/*.png
+!crates/*/icons/*.ico
+
 # Secrets
 .env
 .env.local

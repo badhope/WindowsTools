@@ -13,7 +13,9 @@ async function load() {
   loading.value = true;
   err.value = null;
   try {
-    [tcp.value, udp.value] = await Promise.all([api.netTcpTable(), api.netUdpTable()]);
+    const [tcpRows, udpRows] = await Promise.all([api.netTcpTable(), api.netUdpTable()]);
+    tcp.value = Array.isArray(tcpRows) ? tcpRows : [];
+    udp.value = Array.isArray(udpRows) ? udpRows : [];
   } catch (e: unknown) {
     err.value = String(e);
   } finally {
