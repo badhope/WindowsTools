@@ -1,0 +1,68 @@
+# Rust
+target/
+**/*.rs.bk
+# Cargo.lock is committed for application workspaces (so builds are reproducible).
+
+# Tauri
+src-tauri/target/
+src-tauri/gen/
+crates/*/target/
+crates/wt-ui/gen/
+crates/*/icons/icon-*.png.tmp
+
+# Node
+node_modules/
+dist/
+.vite/
+coverage/
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*.iml
+
+# OS
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# Local logs / dev artefacts (kept out of VCS)
+agent.log
+agent_all.log
+err.log
+out.log
+svc.err
+svc.out
+test.log
+input.json
+check_baseline.log
+check*.log
+typecheck*.log
+lint*.log
+build*.log
+pnpm-*.log
+cargo-*.log
+cargo-*.txt
+rust-test-build.log
+start_llm_server.py
+walk_full.ps1
+walk_views.ps1
+nul
+*.tmp
+*.bak
+*.orig
+*.rej
+
+# Test / coverage reports
+*.lcov
+junit*.xml
+
+# Secrets
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+*.pfx
