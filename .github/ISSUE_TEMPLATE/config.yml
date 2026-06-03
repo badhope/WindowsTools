@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Discussions
+    url: https://github.com/badhope/WindowsTools/discussions
+    about: General questions, ideas, and community chat.
+  - name: Documentation
+    url: https://github.com/badhope/WindowsTools#readme
+    about: README, ADRs, and design docs in this repository.

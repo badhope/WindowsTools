@@ -1,0 +1,91 @@
+name: Bug report
+about: Report a defect in WindowsTools so we can reproduce and fix it.
+title: "[bug] "
+labels: ["bug", "triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug! Please fill out the template
+        below. Issues that don't follow the template will be closed politely.
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Affected component
+      description: Which part of the application is affected?
+      options:
+        - wt-ui (Tauri 2 host)
+        - wt-agent (user-mode IPC server)
+        - wt-service (SYSTEM-mode pipe server)
+        - wt-win32 (Win32 FFI layer)
+        - wt-core (shared types & utilities)
+        - Vue UI
+        - Installer / updater
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened?
+      description: A clear, concise description of the bug.
+      placeholder: |
+        Example: clicking "Refresh services" causes the agent to exit with
+        code 0xC0000005 after a couple of seconds.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open WindowsTools
+        2. Click on Services
+        3. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs / stack traces
+      description: Paste %LOCALAPPDATA%\WindowsTools\logs\*.log output, the wt-agent / wt-service crash dump, or anything else that helps.
+    validations:
+      required: false
+
+  - type: input
+    id: version
+    attributes:
+      label: WindowsTools version
+      placeholder: "v2.0.0"
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Windows build
+      placeholder: "Windows 11 23H2 (OS Build 22631.4391)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priv
+    attributes:
+      label: Running as
+      multiple: false
+      options:
+        - Administrator
+        - Standard user
