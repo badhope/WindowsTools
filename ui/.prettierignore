@@ -1,0 +1,5 @@
+node_modules
+dist
+coverage
+src/i18n/locales
+pnpm-lock.yaml
