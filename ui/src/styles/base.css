@@ -1,0 +1,262 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  margin: 0;
+  height: 100%;
+  font-family: var(--font-sans);
+  background: var(--bg-0);
+  color: var(--fg);
+  font-size: var(--fs-md);
+  line-height: var(--lh-normal);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* --- Scrollbar -------------------------------------------------- */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--bg-3);
+  border-radius: var(--radius-pill);
+  border: 2px solid var(--bg-0);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-strong);
+}
+
+/* --- Headings --------------------------------------------------- */
+h1 {
+  font-size: var(--fs-xl);
+  margin: 0 0 var(--space-4);
+  font-weight: 600;
+  line-height: var(--lh-tight);
+}
+h2 {
+  font-size: var(--fs-lg);
+  margin: 0 0 var(--space-3);
+  font-weight: 600;
+  line-height: var(--lh-tight);
+}
+h3 {
+  font-size: var(--fs-md);
+  margin: 0 0 var(--space-2);
+  font-weight: 600;
+  line-height: var(--lh-tight);
+}
+
+/* --- Buttons ---------------------------------------------------- */
+button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  background: var(--bg-2);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-2);
+  cursor: pointer;
+  font: inherit;
+  line-height: 1.4;
+  transition:
+    background var(--motion-fast) var(--ease-standard),
+    border-color var(--motion-fast) var(--ease-standard),
+    transform var(--motion-fast) var(--ease-standard);
+}
+button:hover:not(:disabled) {
+  background: var(--bg-hover);
+  border-color: var(--border-strong);
+}
+button:active:not(:disabled) {
+  background: var(--bg-active);
+  transform: translateY(1px);
+}
+button:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+button.primary {
+  background: var(--accent-1);
+  color: var(--fg-on-accent);
+  border-color: transparent;
+}
+button.primary:hover:not(:disabled) {
+  background: var(--accent-2);
+  border-color: transparent;
+}
+button.danger {
+  background: var(--err);
+  color: #fff;
+  border-color: transparent;
+}
+button.ghost {
+  background: transparent;
+  border-color: transparent;
+}
+button.ghost:hover:not(:disabled) {
+  background: var(--bg-hover);
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* --- Inputs ----------------------------------------------------- */
+input,
+select,
+textarea {
+  background: var(--bg-1);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-2);
+  font: inherit;
+  line-height: 1.4;
+  transition:
+    border-color var(--motion-fast) var(--ease-standard),
+    box-shadow var(--motion-fast) var(--ease-standard);
+}
+input:hover,
+select:hover,
+textarea:hover {
+  border-color: var(--border-strong);
+}
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--accent-1);
+  box-shadow: var(--shadow-focus);
+}
+
+/* --- Links ------------------------------------------------------ */
+a {
+  color: var(--accent-2);
+  text-decoration: none;
+  transition: color var(--motion-fast) var(--ease-standard);
+}
+a:hover {
+  text-decoration: underline;
+}
+a:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+  border-radius: var(--radius-1);
+}
+
+/* --- Page chrome ------------------------------------------------ */
+.page {
+  padding: var(--space-5);
+  animation: pageFadeIn var(--motion-base) var(--ease-decelerate);
+}
+.page > h1 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+@keyframes pageFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* --- Utility classes ------------------------------------------- */
+.muted {
+  color: var(--fg-2);
+}
+.subtle {
+  color: var(--fg-3);
+}
+.mono {
+  font-family: var(--font-mono);
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.grow {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* --- Skeleton --------------------------------------------------- */
+.skeleton {
+  display: inline-block;
+  background: linear-gradient(90deg, var(--bg-2) 0%, var(--bg-3) 50%, var(--bg-2) 100%);
+  background-size: 200% 100%;
+  border-radius: var(--radius-2);
+  animation: skeleton-shimmer 1.4s var(--ease-standard) infinite;
+}
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* --- Risk / integrity chips ------------------------------------ */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 8px;
+  border-radius: var(--radius-pill);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  line-height: 1.6;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.chip-risk-low {
+  color: var(--risk-low);
+  background: var(--ok-soft);
+}
+.chip-risk-medium {
+  color: var(--risk-medium);
+  background: var(--warn-soft);
+}
+.chip-risk-high {
+  color: var(--risk-high);
+  background: var(--err-soft);
+}
+.chip-risk-unknown {
+  color: var(--risk-unknown);
+  background: var(--bg-3);
+}
+
+/* --- Reduced motion -------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
