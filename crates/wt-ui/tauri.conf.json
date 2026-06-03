@@ -1,0 +1,83 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "WindowsTools",
+  "version": "2.0.0",
+  "identifier": "io.github.windowstools.app",
+  "build": {
+    "beforeDevCommand": "C:\\Users\\X1882\\Desktop\\WindowsTools\\crates\\wt-ui\\dev-ui.bat",
+    "beforeBuildCommand": "C:\\Users\\X1882\\Desktop\\WindowsTools\\crates\\wt-ui\\build-ui.bat",
+    "devUrl": "http://localhost:5173",
+    "frontendDist": "C:\\Users\\X1882\\Desktop\\WindowsTools\\ui\\dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "WindowsTools",
+        "width": 1280,
+        "height": 800,
+        "minWidth": 1024,
+        "minHeight": 640,
+        "resizable": true,
+        "fullscreen": false,
+        "center": true,
+        "decorations": true,
+        "transparent": false,
+        "shadow": true,
+        "alwaysOnTop": false,
+        "label": "main",
+        "additionalBrowserArgs": "--remote-debugging-port=9222 --remote-allow-origins=*"
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; img-src 'self' asset: data: https://asset.localhost; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self' ipc: http://ipc.localhost"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["msi", "nsis"],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "category": "SystemUtility",
+    "shortDescription": "Modern Windows system utilities",
+    "longDescription": "WindowsTools is a privacy-respecting suite of Windows system utilities for power users. It replaces the legacy PowerShell-based GUI with a fast, native Rust+WebView2 application.",
+    "publisher": "WindowsTools Contributors",
+    "windows": {
+      "allowDowngrades": false,
+      "certificateThumbprint": null,
+      "digestAlgorithm": "sha256",
+      "timestampUrl": "",
+      "wix": {
+        "language": ["en-US", "zh-CN"]
+      },
+      "nsis": {
+        "languages": ["English", "SimpChinese"],
+        "displayLanguageSelector": true,
+        "installerIcon": "icons/icon.ico",
+        "installMode": "perMachine"
+      }
+    },
+    "resources": ["icons/*"],
+    "externalBin": [],
+    "copyright": "Copyright (c) 2026 WindowsTools Contributors",
+    "homepage": "https://github.com/badhope/WindowsTools"
+  },
+  "plugins": {
+    "shell": {
+      "open": true,
+      "scope": []
+    },
+    "fs": {
+      "scope": ["$APPDATA/*", "$APPCONFIG/*", "$DESKTOP/*", "$DOCUMENT/*", "$DOWNLOAD/*", "$HOME/*", "$RESOURCE/*", "$TEMP/*"]
+    },
+    "deep-link": {
+      "desktop": {
+        "schemes": ["windowstools"]
+      }
+    }
+  }
+}

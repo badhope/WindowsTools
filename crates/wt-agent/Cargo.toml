@@ -1,0 +1,35 @@
+[package]
+name = "wt-agent"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "WindowsTools user-mode agent. Started by wt-ui; auto-starts the SYSTEM service; executes non-elevated operations locally and forwards elevated ones over the named pipe."
+
+[[bin]]
+name = "wt-agent"
+path = "src/main.rs"
+
+[lib]
+name = "wt_agent"
+path = "src/lib.rs"
+
+[dependencies]
+wt-core.workspace = true
+wt-win32.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+anyhow.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+parking_lot.workspace = true
+clap.workspace = true
+chrono.workspace = true
+rand.workspace = true
+sha2.workspace = true
+subtle.workspace = true
+
+[target.'cfg(windows)'.dependencies]
+windows = { workspace = true }

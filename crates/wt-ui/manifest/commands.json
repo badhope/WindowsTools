@@ -1,0 +1,16 @@
+{
+  "items": [
+    { "id": "dashboard",    "title": "Dashboard",       "title_zh": "仪表盘",    "category": "overview",  "keywords": ["home","overview","system"],      "risk": "low",    "requires_admin": false, "route": "/" },
+    { "id": "processes",    "title": "Processes",       "title_zh": "进程",      "category": "system",   "keywords": ["process","task","kill"],         "risk": "medium", "requires_admin": false, "route": "/processes" },
+    { "id": "services",     "title": "Services",        "title_zh": "服务",      "category": "system",   "keywords": ["service","scm","start","stop"],   "risk": "high",   "requires_admin": true,  "route": "/services" },
+    { "id": "registry",     "title": "Registry",        "title_zh": "注册表",    "category": "system",   "keywords": ["reg","regedit","key"],            "risk": "high",   "requires_admin": true,  "route": "/registry" },
+    { "id": "network",      "title": "Network",         "title_zh": "网络",      "category": "system",   "keywords": ["net","tcp","udp","ip","dns"],     "risk": "low",    "requires_admin": false, "route": "/network" },
+    { "id": "disk",         "title": "Disk",            "title_zh": "磁盘",      "category": "system",   "keywords": ["drive","volume","space","cleanup"],"risk": "low",   "requires_admin": false, "route": "/disk" },
+    { "id": "startup",      "title": "Startup",         "title_zh": "启动项",    "category": "system",   "keywords": ["boot","run","autostart"],         "risk": "medium", "requires_admin": false, "route": "/startup" },
+    { "id": "performance",  "title": "Performance",     "title_zh": "性能",      "category": "monitor",  "keywords": ["perf","cpu","ram","pdh"],         "risk": "low",    "requires_admin": false, "route": "/performance" },
+    { "id": "hosts",        "title": "Hosts file",      "title_zh": "Hosts 文件","category": "system",   "keywords": ["hosts","dns","block"],            "risk": "high",   "requires_admin": true,  "route": "/hosts" },
+    { "id": "repair",       "title": "Repair (SFC/DISM)","title_zh": "系统修复",  "category": "tools",    "keywords": ["sfc","dism","repair","scan"],     "risk": "high",   "requires_admin": true,  "route": "/repair" },
+    { "id": "tasks",        "title": "Scheduled tasks", "title_zh": "计划任务",  "category": "system",   "keywords": ["task","scheduler","cron"],         "risk": "medium", "requires_admin": false, "route": "/tasks" },
+    { "id": "settings",     "title": "Settings",        "title_zh": "设置",      "category": "settings", "keywords": ["settings","prefs","config"],      "risk": "low",    "requires_admin": false, "route": "/settings" }
+  ]
+}

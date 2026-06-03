@@ -1,0 +1,29 @@
+[package]
+name = "wt-win32"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+wt-core = { path = "../wt-core" }
+windows = { workspace = true }
+windows-sys = { workspace = true }
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+chrono = { workspace = true }
+parking_lot = { workspace = true }
+dashmap = { workspace = true }
+once_cell = { workspace = true }
+widestring = { workspace = true }
+encoding_rs = { workspace = true }
+rand = { workspace = true }
+uuid = { workspace = true }
+futures = { workspace = true }
+async-trait = { workspace = true }
+crossbeam-channel = { workspace = true }
+inventory = { workspace = true }
