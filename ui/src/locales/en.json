@@ -1,0 +1,54 @@
+{
+  "app": { "name": "WindowsTools" },
+  "nav": {
+    "dashboard":   "Dashboard",
+    "processes":   "Processes",
+    "services":    "Services",
+    "registry":    "Registry",
+    "network":     "Network",
+    "disk":        "Disk",
+    "startup":     "Startup",
+    "performance": "Performance",
+    "hosts":       "Hosts",
+    "repair":      "Repair",
+    "tasks":       "Scheduled tasks",
+    "settings":    "Settings"
+  },
+  "common": {
+    "refresh": "Refresh", "kill": "Kill", "start": "Start", "stop": "Stop",
+    "delete":  "Delete",  "save": "Save",  "cancel": "Cancel", "confirm": "Confirm",
+    "add":     "Add",     "remove": "Remove", "yes": "Yes", "no": "No",
+    "search":  "Search",  "loading": "Loading…", "error": "Error",
+    "retry":   "Retry",
+    "empty": {
+      "title": "Nothing here yet",
+      "description": "There are no items to display."
+    },
+    "error": {
+      "title": "Something went wrong"
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "computer": "Computer", "user": "User", "os": "OS", "integrity": "Integrity",
+    "uptime": "Uptime", "pid": "PID", "elevated": "Elevated"
+  },
+  "settings": {
+    "title": "Settings",
+    "appearance": "Appearance",
+    "theme": "Theme",
+    "themeDark": "Dark",
+    "themeLight": "Light",
+    "language": "Language",
+    "system": "System",
+    "refreshInfo": "Refresh system info",
+    "about": "About",
+    "aboutBody": "WindowsTools v2.0.0 · Rust + Tauri 2 + Vue 3.5"
+  },
+  "palette": {
+    "placeholder": "Type a command…",
+    "empty": "No matching commands.",
+    "favorites": "Favorites",
+    "recent": "Recent"
+  }
+}

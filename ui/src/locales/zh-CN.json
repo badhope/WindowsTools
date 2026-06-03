@@ -1,0 +1,54 @@
+{
+  "app": { "name": "WindowsTools" },
+  "nav": {
+    "dashboard":   "仪表盘",
+    "processes":   "进程",
+    "services":    "服务",
+    "registry":    "注册表",
+    "network":     "网络",
+    "disk":        "磁盘",
+    "startup":     "启动项",
+    "performance": "性能",
+    "hosts":       "Hosts",
+    "repair":      "修复",
+    "tasks":       "计划任务",
+    "settings":    "设置"
+  },
+  "common": {
+    "refresh": "刷新", "kill": "结束", "start": "启动", "stop": "停止",
+    "delete":  "删除", "save": "保存", "cancel": "取消", "confirm": "确认",
+    "add":     "添加", "remove": "移除", "yes": "是", "no": "否",
+    "search":  "搜索", "loading": "加载中…", "error": "错误",
+    "retry":   "重试",
+    "empty": {
+      "title": "暂无数据",
+      "description": "当前没有可显示的内容。"
+    },
+    "error": {
+      "title": "出错了"
+    }
+  },
+  "dashboard": {
+    "title": "仪表盘",
+    "computer": "计算机", "user": "用户", "os": "操作系统", "integrity": "完整性",
+    "uptime": "运行时间", "pid": "PID", "elevated": "已提权"
+  },
+  "settings": {
+    "title": "设置",
+    "appearance": "外观",
+    "theme": "主题",
+    "themeDark": "深色",
+    "themeLight": "浅色",
+    "language": "语言",
+    "system": "系统",
+    "refreshInfo": "刷新系统信息",
+    "about": "关于",
+    "aboutBody": "WindowsTools v2.0.0 · Rust + Tauri 2 + Vue 3.5"
+  },
+  "palette": {
+    "placeholder": "输入命令…",
+    "empty": "没有匹配的命令。",
+    "favorites": "收藏",
+    "recent": "最近使用"
+  }
+}
