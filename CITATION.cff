@@ -7,7 +7,6 @@ authors:
   - family-names: badhope
     given-names: badhope
     alias: badhope
-    orcid: https://orcid.org/0000-0000-0000-0000
 identifiers:
   - type: url
     value: https://github.com/badhope/WindowsTools
@@ -16,6 +15,15 @@ type: software
 url: https://github.com/badhope/WindowsTools
 repository-code: https://github.com/badhope/WindowsTools
 keywords:
-  - open-source, software
+  - tools
+  - windows
+  - desktop-app
+  - system-administration
+  - system-optimization
+  - utilities
+  - vue
+  - rust
+  - tauri
+  - badhope
 abstract: >-
-  A Windows desktop toolkit for power users and sysadmins. Tauri 2 + Vue 3.5 GUI consolidating common ops/troubleshooting tasks: dashboard, processes, services, registry, network, disk, startup, performance, hosts editor, repair, scheduled tasks, settings, and a 35-command command palette.
+  Windows desktop toolkit for power users and sysadmins. Tauri 2 + Vue 3.5, wt-service runs as SYSTEM for the high-privilege ops (services, registry, hosts, scheduled tasks). 35-command palette to skip the menus.
