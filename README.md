@@ -1,14 +1,37 @@
 # WindowsTools
 
-> 一个面向高级用户和系统管理员的 Windows 桌面工具集，把常见的运维 / 排障操作
-> 收拢到统一的 Tauri 2 + Vue 3.5 GUI 中。
+> 一个 Tauri 2 + Vue 3.5 写的 Windows 桌面工具集,把我每隔几个月
+> 就要查一次的运维命令、注册表项、Hosts 路径,收拢到一个 GUI 里。
+> 35 条命令面板,按 `Ctrl/⌘+K` 直接搜。
 
-[![CI](https://img.shields.io/badge/CI-windows--latest-blue)](.github/workflows/ci.yml)
-[![CodeQL](https://img.shields.io/badge/CodeQL-enabled-blueviolet)](.github/workflows/codeql.yml)
-[![Release](https://img.shields.io/badge/Release-MSI%20%7C%20NSIS-success)](.github/workflows/release.yml)
-[![Rust](https://img.shields.io/badge/rust-1.96%2B-orange)](https://www.rust-lang.org)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Tauri](https://img.shields.io/badge/Tauri-2.1-FFC131)](https://tauri.app)
+做这个的动机:我不想再在 PowerShell 里手敲 30 个字符的命令,只为了看一眼
+某个服务的状态。
+
+---
+
+## 包含什么
+
+| 分类 | 视图 | 主要能力 |
+|------|------|----------|
+| 仪表盘 | `Dashboard` | 主机名 / 操作系统 / 运行时间 / CPU / 内存 / 磁盘 / 一键刷新 |
+| 进程 | `Processes` | 列出所有进程、PID、用户、CPU% / 内存,右键结束进程 |
+| 服务 | `Services` | 枚举 SCM 服务、查看启动类型、启动 / 停止 / 修改启动类型 |
+| 注册表 | `Registry` | 浏览子键、读取 / 写入 / 删除 `REG_SZ` / `REG_DWORD` / `REG_BINARY` |
+| 网络 | `Network` | 列出网卡、TCP / UDP 连接表 (IPv4 + IPv6) |
+| 磁盘 | `Disk` | 枚举卷、读取空闲空间、健康度提示 |
+| 启动项 | `Startup` | HKCU / HKLM Run、RunOnce 启动项启用 / 禁用 |
+| 性能 | `Performance` | PDH 实时采样:CPU / 内存 / 磁盘 / 网络 (含 SVG sparkline) |
+| Hosts | `Hosts` | 可视化编辑 `C:\Windows\System32\drivers\etc\hosts` |
+| 修复 | `Repair` | 一键 `sfc /scannow` 和 `DISM /Online /Cleanup-Image /RestoreHealth` |
+| 计划任务 | `Tasks` | 列出任务计划程序中的任务,立即运行 |
+| 设置 | `Settings` | 主题 (明 / 暗)、语言 (zh-CN / en)、关于 |
+| 命令面板 | `Ctrl/⌘+K` | 35 条命令的快速搜索 / 启动 |
+
+所有"高权限"操作 (修改服务、写入注册表、Hosts、计划任务等) 由
+`wt-service` (SYSTEM 模式 Named Pipe 服务) 代理执行,由 `wt-agent`
+(用户态 JSON-RPC) 作为 IPC 入口;传输层使用 HMAC-SHA256 防伪。
+
+---
 
 ## ✨ 功能
 
