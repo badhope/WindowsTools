@@ -1,45 +1,55 @@
-name: Feature request
-about: Suggest a new feature or improvement.
-title: "[feature] "
-labels: ["enhancement"]
+name: Feature Request
+description: Suggest a new feature or improvement.
+title: "[feat]: "
+labels: ["enhancement", "triage"]
 assignees: []
 
 body:
   - type: markdown
     attributes:
       value: |
-        Describe the feature you'd like. We love concrete proposals!
+        Describe the **problem** first, then the proposed **solution**.
+        The "why" matters more than the "how".
 
   - type: textarea
     id: problem
     attributes:
-      label: Problem statement
-      description: What problem are you trying to solve?
-      placeholder: |
-        I want to be able to compare two snapshots of the Hosts file so I
-        can see what changed between audits.
+      label: The problem
+      description: What's painful? What can't you do today?
+      placeholder: "Right now I have to ...; this is annoying because ..."
     validations:
       required: true
 
   - type: textarea
     id: solution
     attributes:
-      label: Proposed solution
-      description: How should this work?
+      label: What I want
+      description: The feature, change, or improvement.
     validations:
       required: true
 
   - type: textarea
     id: alternatives
     attributes:
-      label: Alternatives considered
+      label: What I tried / considered
     validations:
       required: false
 
   - type: textarea
-    id: context
+    id: scope
     attributes:
-      label: Additional context
-      description: Screenshots, mockups, links to similar apps, etc.
+      label: Scope
+      description: Does this change user-facing behavior, the API, the data model, or the build? Any backward-compat risk?
+    validations:
+      required: false
+
+  - type: dropdown
+    id: willingness
+    attributes:
+      label: My willingness
+      options:
+        - I'd send a PR for this
+        - I can help test / review
+        - I can only describe the use case
     validations:
       required: false
