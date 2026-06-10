@@ -1,32 +1,27 @@
-# Pull Request
+## What
 
-## What does this PR do?
+<!-- One line: what this PR does -->
 
-<!-- A clear, single-sentence description. -->
+## Why
 
-## Why is this change needed?
+<!-- The reason. What problem does this fix / what value does it add? -->
 
-<!-- The problem, bug, or feature being addressed. Link any related issues. -->
+## How
 
-## How was this tested?
+<!-- Approach, breaking changes, anything weird you did -->
 
-<!-- Describe the manual / automated tests you ran. -->
+## Tested
 
-- [ ] `cargo fmt --all -- --check` passes
-- [ ] `cargo clippy --workspace --all-targets --locked -- -D warnings` passes
-- [ ] `cargo test --workspace --locked` passes
-- [ ] `pnpm typecheck` passes
-- [ ] `pnpm build` passes
-- [ ] Manual smoke test of affected Tauri command(s)
+<!-- How you tested. If you didn't, say so and tell me why -->
 
 ## Checklist
 
-- [ ] My code follows the project style (`rustfmt`, `clippy`, ESLint / Prettier)
-- [ ] I have added or updated unit tests for the change
-- [ ] I have added or updated documentation where needed
-- [ ] I have verified the change on Windows 10 / 11
-- [ ] I have read the [CONTRIBUTING](../CONTRIBUTING.md) guide (if present)
+- [ ] I have read [`CONTRIBUTING.md`](./CONTRIBUTING.md)
+- [ ] Tests pass locally (and CI is green)
+- [ ] I didn't add any new linter / typecheck warnings
+- [ ] I didn't commit any secrets, build output, or large binaries
+- [ ] I added a `CHANGELOG.md` entry under "Unreleased" if it matters
 
 ## Screenshots / Logs
 
-<!-- Attach before/after screenshots, perf traces, or logs. -->
+<!-- Drag in images for UI changes. Paste (redacted) logs for runtime changes. -->

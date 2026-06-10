@@ -1,6 +1,6 @@
-name: Bug report
-about: Report a defect in WindowsTools so we can reproduce and fix it.
-title: "[bug] "
+name: Bug Report
+description: Something is broken or behaving wrong.
+title: "[bug]: "
 labels: ["bug", "triage"]
 assignees: []
 
@@ -8,41 +8,15 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for taking the time to file a bug! Please fill out the template
-        below. Issues that don't follow the template will be closed politely.
-
-  - type: dropdown
-    id: component
-    attributes:
-      label: Affected component
-      description: Which part of the application is affected?
-      options:
-        - wt-ui (Tauri 2 host)
-        - wt-agent (user-mode IPC server)
-        - wt-service (SYSTEM-mode pipe server)
-        - wt-win32 (Win32 FFI layer)
-        - wt-core (shared types & utilities)
-        - Vue UI
-        - Installer / updater
-        - Other
-    validations:
-      required: true
+        Thanks for taking the time. The more detail, the faster I can
+        reproduce and fix this.
 
   - type: textarea
-    id: summary
+    id: what
     attributes:
       label: What happened?
-      description: A clear, concise description of the bug.
-      placeholder: |
-        Example: clicking "Refresh services" causes the agent to exit with
-        code 0xC0000005 after a couple of seconds.
-    validations:
-      required: true
-
-  - type: textarea
-    id: expected
-    attributes:
-      label: What did you expect to happen?
+      description: Clear, short description of the bug.
+      placeholder: "When I run `...`, I get `...` instead of `...`."
     validations:
       required: true
 
@@ -50,42 +24,66 @@ body:
     id: repro
     attributes:
       label: Steps to reproduce
+      description: Numbered. Smallest example you can manage.
       placeholder: |
-        1. Open WindowsTools
-        2. Click on Services
-        3. ...
+        1. Install with `...`
+        2. Run `...`
+        3. Open `...`
     validations:
       required: true
 
   - type: textarea
-    id: logs
+    id: expected
     attributes:
-      label: Relevant logs / stack traces
-      description: Paste %LOCALAPPDATA%\WindowsTools\logs\*.log output, the wt-agent / wt-service crash dump, or anything else that helps.
+      label: Expected
     validations:
-      required: false
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual (include logs / stack traces)
+    validations:
+      required: true
 
   - type: input
     id: version
     attributes:
-      label: WindowsTools version
-      placeholder: "v2.0.0"
-    validations:
-      required: true
-
-  - type: input
-    id: os
-    attributes:
-      label: Windows build
-      placeholder: "Windows 11 23H2 (OS Build 22631.4391)"
+      label: Version / commit
+      placeholder: "v1.2.3 or abcdef0"
     validations:
       required: true
 
   - type: dropdown
-    id: priv
+    id: where
     attributes:
-      label: Running as
-      multiple: false
+      label: Where did you run it?
       options:
-        - Administrator
-        - Standard user
+        - Local (macOS)
+        - Local (Linux)
+        - Local (Windows)
+        - Docker / container
+        - CI
+        - Cloud / VM
+        - Other
+    validations:
+      required: false
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: How bad?
+      options:
+        - Low (cosmetic / minor inconvenience)
+        - Medium (broken feature, workaround exists)
+        - High (broken feature, no workaround)
+        - Critical (data loss, security, outage)
+    validations:
+      required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Anything else
+    validations:
+      required: false
