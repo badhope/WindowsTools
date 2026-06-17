@@ -84,10 +84,7 @@ impl RegistryPath {
         if trimmed.is_empty() {
             return Err(Error::InvalidInput("empty registry path".into()));
         }
-        let (hive_str, rest) = trimmed
-            .split_once(['\\', '/'])
-            .map(|(h, r)| (h, r))
-            .unwrap_or((trimmed, ""));
+        let (hive_str, rest) = trimmed.split_once(['\\', '/']).unwrap_or((trimmed, ""));
         let hive = match hive_str.to_ascii_uppercase().as_str() {
             "HKCR" | "HKEY_CLASSES_ROOT" => Hive::ClassesRoot,
             "HKCU" | "HKEY_CURRENT_USER" => Hive::CurrentUser,

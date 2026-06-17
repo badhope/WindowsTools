@@ -153,7 +153,7 @@ fn build_request(op: &str, params: BTreeMap<String, serde_json::Value>) -> Resul
     let caller_pid = std::process::id();
     let caller_sid = wt_win32::privilege::user_sid().unwrap_or_default();
     let mut nonce = [0u8; 16];
-    rand::thread_rng().fill_bytes(&mut nonce);
+    rand::rng().fill_bytes(&mut nonce);
     // MAC is computed but the service-side validator is opt-in (skip by default).
     let mac = {
         use sha2::Digest;

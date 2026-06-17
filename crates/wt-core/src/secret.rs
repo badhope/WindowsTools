@@ -17,7 +17,7 @@ impl SharedSecret {
     /// Generate a fresh random secret.
     pub fn generate() -> Self {
         let mut bytes = [0u8; 32];
-        rand::thread_rng().fill_bytes(&mut bytes);
+        rand::rng().fill_bytes(&mut bytes);
         Self {
             bytes: Arc::new(bytes),
         }
