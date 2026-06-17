@@ -1,6 +1,6 @@
 //! Secure per-session shared secret used to authenticate IPC frames.
 
-use rand::RngCore;
+use rand::Rng;
 use sha2::{Digest, Sha256};
 use std::sync::Arc;
 use subtle::ConstantTimeEq;
