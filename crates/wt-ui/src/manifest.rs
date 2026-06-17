@@ -169,6 +169,7 @@ fn builtin() -> Manifest {
     Manifest { items }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn item(
     id: &str,
     title: &str,
