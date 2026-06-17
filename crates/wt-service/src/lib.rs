@@ -458,7 +458,7 @@ pub fn install_service() -> WsResult<()> {
         service_type: ServiceType::OWN_PROCESS,
         start_type: ServiceStartType::OnDemand,
         error_control: ServiceErrorControl::Normal,
-        executable_path: std::env::current_exe().unwrap_or_default().into(),
+        executable_path: std::env::current_exe().unwrap_or_default(),
         launch_arguments: vec!["run".into()],
         dependencies: vec![],
         account_name: None, // LocalSystem

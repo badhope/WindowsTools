@@ -76,7 +76,7 @@ fn ensure_service_started() -> Result<()> {
     }
     // Wait for it to bind the pipe.
     for _ in 0..50 {
-        if let Ok(_) = ipc_pipe::connect_client(PIPE_NAME) {
+        if ipc_pipe::connect_client(PIPE_NAME).is_ok() {
             return Ok(());
         }
         std::thread::sleep(Duration::from_millis(100));
@@ -169,7 +169,7 @@ fn build_request(op: &str, params: BTreeMap<String, serde_json::Value>) -> Resul
                     .as_slice(),
             );
         }
-        h.update(&nonce);
+        h.update(nonce);
         h.finalize().to_vec()
     };
     Ok(Request {
@@ -273,7 +273,7 @@ pub fn whoami() -> Result<serde_json::Value> {
 
 fn b64_encode(bytes: &[u8]) -> String {
     const CHARS: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-    let mut out = String::with_capacity((bytes.len() + 2) / 3 * 4);
+    let mut out = String::with_capacity(bytes.len().div_ceil(3) * 4);
     let mut i = 0;
     while i < bytes.len() {
         let b0 = bytes[i];
@@ -400,7 +400,7 @@ fn dispatch_stdio(req: &StdioRequest) -> Result<serde_json::Value> {
                 serde_json::from_value(req.params.get("kind").cloned().unwrap_or_default())?;
             let data_b64: String =
                 serde_json::from_value(req.params.get("data_b64").cloned().unwrap_or_default())?;
-            let bytes = b64_decode(&data_b64).map_err(|e| Error::InvalidInput(e))?;
+            let bytes = b64_decode(&data_b64).map_err(Error::InvalidInput)?;
             registry_set(&path, &name, &kind, &bytes)?;
             Ok(serde_json::json!({ "ok": true }))
         }
