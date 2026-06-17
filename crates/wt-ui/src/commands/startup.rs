@@ -12,7 +12,9 @@ pub fn startup_list() -> wt_core::Result<serde_json::Value> {
 pub fn startup_enable(args: StartupToggleArgs) -> wt_core::Result<()> {
     match args.source.as_str() {
         "hkcu_run" => wt_win32::startup::enable_hkcu_run(&args.name, &args.command),
-        other      => Err(wt_core::Error::InvalidInput(format!("startup_enable: unsupported source {other}"))),
+        other => Err(wt_core::Error::InvalidInput(format!(
+            "startup_enable: unsupported source {other}"
+        ))),
     }
 }
 
@@ -20,6 +22,8 @@ pub fn startup_enable(args: StartupToggleArgs) -> wt_core::Result<()> {
 pub fn startup_disable(args: StartupToggleArgs) -> wt_core::Result<()> {
     match args.source.as_str() {
         "hkcu_run" => wt_win32::startup::disable_hkcu_run(&args.name),
-        other      => Err(wt_core::Error::InvalidInput(format!("startup_disable: unsupported source {other}"))),
+        other => Err(wt_core::Error::InvalidInput(format!(
+            "startup_disable: unsupported source {other}"
+        ))),
     }
 }

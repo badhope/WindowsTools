@@ -1,9 +1,9 @@
 //! Startup items: HKCU/HKLM Run, RunOnce, plus the Startup folder.
 
+use crate::registry::{self, Hive, ValueData};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use wt_core::Result;
-use crate::registry::{self, Hive, ValueData};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StartupItem {
@@ -31,10 +31,26 @@ pub enum StartupSource {
 
 pub fn list() -> Result<Vec<StartupItem>> {
     let mut out = Vec::new();
-    out.extend(read_run_key(Hive::CurrentUser, r"Software\Microsoft\Windows\CurrentVersion\Run", StartupSource::HkcuRun)?);
-    out.extend(read_run_key(Hive::LocalMachine, r"Software\Microsoft\Windows\CurrentVersion\Run", StartupSource::HklmRun)?);
-    out.extend(read_run_key(Hive::CurrentUser, r"Software\Microsoft\Windows\CurrentVersion\RunOnce", StartupSource::HkcuRunOnce)?);
-    out.extend(read_run_key(Hive::LocalMachine, r"Software\Microsoft\Windows\CurrentVersion\RunOnce", StartupSource::HklmRunOnce)?);
+    out.extend(read_run_key(
+        Hive::CurrentUser,
+        r"Software\Microsoft\Windows\CurrentVersion\Run",
+        StartupSource::HkcuRun,
+    )?);
+    out.extend(read_run_key(
+        Hive::LocalMachine,
+        r"Software\Microsoft\Windows\CurrentVersion\Run",
+        StartupSource::HklmRun,
+    )?);
+    out.extend(read_run_key(
+        Hive::CurrentUser,
+        r"Software\Microsoft\Windows\CurrentVersion\RunOnce",
+        StartupSource::HkcuRunOnce,
+    )?);
+    out.extend(read_run_key(
+        Hive::LocalMachine,
+        r"Software\Microsoft\Windows\CurrentVersion\RunOnce",
+        StartupSource::HklmRunOnce,
+    )?);
     out.extend(read_startup_folder()?);
     Ok(out)
 }
@@ -86,11 +102,19 @@ fn read_startup_folder() -> Result<Vec<StartupItem>> {
 }
 
 pub fn enable_hkcu_run(name: &str, command: &str) -> Result<()> {
-    let k = registry::open_key(Hive::CurrentUser, r"Software\Microsoft\Windows\CurrentVersion\Run", true)?;
+    let k = registry::open_key(
+        Hive::CurrentUser,
+        r"Software\Microsoft\Windows\CurrentVersion\Run",
+        true,
+    )?;
     registry::write_value(&k, name, &ValueData::Sz(command.to_string()))
 }
 
 pub fn disable_hkcu_run(name: &str) -> Result<()> {
-    let k = registry::open_key(Hive::CurrentUser, r"Software\Microsoft\Windows\CurrentVersion\Run", true)?;
+    let k = registry::open_key(
+        Hive::CurrentUser,
+        r"Software\Microsoft\Windows\CurrentVersion\Run",
+        true,
+    )?;
     registry::delete_value(&k, name)
 }

@@ -21,7 +21,10 @@ where
     K: Into<String>,
     V: Into<serde_json::Value>,
 {
-    pairs.into_iter().map(|(k, v)| (k.into(), v.into())).collect()
+    pairs
+        .into_iter()
+        .map(|(k, v)| (k.into(), v.into()))
+        .collect()
 }
 
 /// Handle to a long-lived perf sampler.  Currently wraps a local PDH
@@ -47,4 +50,6 @@ impl PerfHandle {
 
 /// Convert a Win32 error code into our error type.  Thin wrapper
 /// around `Error::win32` that is occasionally useful in commands.
-pub fn win32(code: i32, ctx: &str) -> Error { Error::win32(code, ctx) }
+pub fn win32(code: i32, ctx: &str) -> Error {
+    Error::win32(code, ctx)
+}

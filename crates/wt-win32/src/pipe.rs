@@ -79,7 +79,11 @@ fn wide_null(s: &str) -> Vec<u16> {
 }
 
 fn check(r: i32, op: &str) -> Result<()> {
-    if r == 0 { Err(wt_core::Error::win32(unsafe { GetLastError() } as i32, op)) } else { Ok(()) }
+    if r == 0 {
+        Err(wt_core::Error::win32(unsafe { GetLastError() } as i32, op))
+    } else {
+        Ok(())
+    }
 }
 
 /// Create a server end of a named pipe. `instance` lets you create multiple
@@ -108,7 +112,10 @@ pub fn create_server_by_name(name: &str) -> Result<PipeHandle> {
             sa.as_ref() as *const Sa as *mut c_void,
         );
         if h.is_null() || h == INVALID_HANDLE_VALUE {
-            return Err(wt_core::Error::win32(GetLastError() as i32, "CreateNamedPipeW"));
+            return Err(wt_core::Error::win32(
+                GetLastError() as i32,
+                "CreateNamedPipeW",
+            ));
         }
         // Leak the security descriptor; the process lives as long as the pipe.
         std::mem::forget(sa);
@@ -143,13 +150,24 @@ fn build_security_attributes() -> Box<Sa> {
     let mut sd_size: u32 = 0;
     let r = unsafe {
         ConvertStringSecurityDescriptorToSecurityDescriptorW(
-            sd_string.as_ptr(), 1, &mut sd, &mut sd_size,
+            sd_string.as_ptr(),
+            1,
+            &mut sd,
+            &mut sd_size,
         )
     };
     if r == 0 || sd.is_null() {
-        return Box::new(Sa { n_length: std::mem::size_of::<Sa>() as u32, lp_security_descriptor: std::ptr::null_mut(), b_inherit_handle: 0 });
+        return Box::new(Sa {
+            n_length: std::mem::size_of::<Sa>() as u32,
+            lp_security_descriptor: std::ptr::null_mut(),
+            b_inherit_handle: 0,
+        });
     }
-    Box::new(Sa { n_length: std::mem::size_of::<Sa>() as u32, lp_security_descriptor: sd, b_inherit_handle: 0 })
+    Box::new(Sa {
+        n_length: std::mem::size_of::<Sa>() as u32,
+        lp_security_descriptor: sd,
+        b_inherit_handle: 0,
+    })
 }
 
 /// Block until a client connects to the server end.
@@ -187,7 +205,10 @@ pub fn connect_client(name: &str) -> Result<PipeHandle> {
             std::ptr::null_mut(),
         );
         if h.is_null() || h == INVALID_HANDLE_VALUE {
-            return Err(wt_core::Error::win32(GetLastError() as i32, format!("CreateFileW {name}")));
+            return Err(wt_core::Error::win32(
+                GetLastError() as i32,
+                format!("CreateFileW {name}"),
+            ));
         }
         Ok(h)
     }
@@ -202,13 +223,23 @@ pub fn send(h: PipeHandle, env: &Envelope) -> Result<()> {
         let r = WriteFile(h, len.as_ptr(), 4, &mut written, std::ptr::null_mut());
         check(r, "WriteFile length")?;
         if written != 4 {
-            return Err(wt_core::Error::Ipc(format!("WriteFile short length: {written}")));
+            return Err(wt_core::Error::Ipc(format!(
+                "WriteFile short length: {written}"
+            )));
         }
         written = 0;
-        let r = WriteFile(h, bytes.as_ptr(), bytes.len() as u32, &mut written, std::ptr::null_mut());
+        let r = WriteFile(
+            h,
+            bytes.as_ptr(),
+            bytes.len() as u32,
+            &mut written,
+            std::ptr::null_mut(),
+        );
         check(r, "WriteFile payload")?;
         if written as usize != bytes.len() {
-            return Err(wt_core::Error::Ipc(format!("WriteFile short payload: {written}")));
+            return Err(wt_core::Error::Ipc(format!(
+                "WriteFile short payload: {written}"
+            )));
         }
     }
     Ok(())
@@ -221,16 +252,28 @@ pub fn recv(h: PipeHandle) -> Result<Envelope> {
     unsafe {
         let r = ReadFile(h, len_buf.as_mut_ptr(), 4, &mut read, std::ptr::null_mut());
         check(r, "ReadFile length")?;
-        if read == 0 { return Err(wt_core::Error::Ipc("pipe closed".into())); }
+        if read == 0 {
+            return Err(wt_core::Error::Ipc("pipe closed".into()));
+        }
         if read != 4 {
-            return Err(wt_core::Error::Ipc(format!("ReadFile short length: {read}")));
+            return Err(wt_core::Error::Ipc(format!(
+                "ReadFile short length: {read}"
+            )));
         }
         let len = u32::from_le_bytes(len_buf) as usize;
         let mut buf = vec![0u8; len];
-        let r = ReadFile(h, buf.as_mut_ptr(), len as u32, &mut read, std::ptr::null_mut());
+        let r = ReadFile(
+            h,
+            buf.as_mut_ptr(),
+            len as u32,
+            &mut read,
+            std::ptr::null_mut(),
+        );
         check(r, "ReadFile payload")?;
         if read as usize != len {
-            return Err(wt_core::Error::Ipc(format!("ReadFile short payload: {read} of {len}")));
+            return Err(wt_core::Error::Ipc(format!(
+                "ReadFile short payload: {read} of {len}"
+            )));
         }
         Ok(serde_json::from_slice(&buf).map_err(wt_core::Error::from)?)
     }

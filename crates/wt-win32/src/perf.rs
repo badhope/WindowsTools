@@ -3,10 +3,10 @@
 //! Provides CPU%, memory%, and disk I/O samples on demand. A background
 //! sampler can publish `PerfSample` events at a fixed interval.
 
-use serde::{Deserialize, Serialize};
-use std::sync::Arc;
 use parking_lot::Mutex;
+use serde::{Deserialize, Serialize};
 use std::ffi::c_void;
+use std::sync::Arc;
 use wt_core::{Error, Result};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -65,9 +65,19 @@ union PdhFmtValue {
 #[link(name = "pdh")]
 extern "system" {
     fn PdhOpenQueryW(data_source: *const u16, user_data: usize, query: *mut PdhQuery) -> u32;
-    fn PdhAddCounterW(query: PdhQuery, counter_path: *const u16, user_data: usize, counter: *mut PdhCounter) -> u32;
+    fn PdhAddCounterW(
+        query: PdhQuery,
+        counter_path: *const u16,
+        user_data: usize,
+        counter: *mut PdhCounter,
+    ) -> u32;
     fn PdhCollectQueryData(query: PdhQuery) -> u32;
-    fn PdhGetFormattedCounterValue(counter: PdhCounter, format: u32, ret: *mut u32, value: *mut PdhFmtCountervalue) -> u32;
+    fn PdhGetFormattedCounterValue(
+        counter: PdhCounter,
+        format: u32,
+        ret: *mut u32,
+        value: *mut PdhFmtCountervalue,
+    ) -> u32;
     fn PdhCloseQuery(query: PdhQuery) -> u32;
     fn PdhRemoveCounter(counter: PdhCounter) -> u32;
 }
@@ -81,7 +91,9 @@ unsafe impl Sync for PerfSampler {}
 
 impl PerfSampler {
     pub fn new() -> Result<Self> {
-        let s = Self { inner: Arc::new(Mutex::new(None)) };
+        let s = Self {
+            inner: Arc::new(Mutex::new(None)),
+        };
         s.open()?;
         Ok(s)
     }
@@ -90,16 +102,26 @@ impl PerfSampler {
         unsafe {
             let mut q: PdhQuery = std::ptr::null_mut();
             let r = PdhOpenQueryW(std::ptr::null(), 0, &mut q);
-            if r != 0 { return Err(Error::win32(r as i32, "PdhOpenQueryW")); }
+            if r != 0 {
+                return Err(Error::win32(r as i32, "PdhOpenQueryW"));
+            }
             let cpu = self.add_counter(q, r"\Processor(_Total)\% Processor Time")?;
             let mem = self.add_counter(q, r"\Memory\Available Bytes")?;
             let dr = self.add_counter(q, r"\PhysicalDisk(_Total)\Disk Read Bytes/sec")?;
             let dw = self.add_counter(q, r"\PhysicalDisk(_Total)\Disk Write Bytes/sec")?;
             let r = PdhCollectQueryData(q);
-            if r != 0 { return Err(Error::win32(r as i32, "PdhCollectQueryData prime")); }
+            if r != 0 {
+                return Err(Error::win32(r as i32, "PdhCollectQueryData prime"));
+            }
             *self.inner.lock() = Some(PerfInner {
-                query: q, cpu_total: cpu, mem_avail: mem, disk_read: dr, disk_write: dw,
-                prev_read: 0.0, prev_write: 0.0, prev_tick: now_ms(),
+                query: q,
+                cpu_total: cpu,
+                mem_avail: mem,
+                disk_read: dr,
+                disk_write: dw,
+                prev_read: 0.0,
+                prev_write: 0.0,
+                prev_tick: now_ms(),
             });
             Ok(())
         }
@@ -109,16 +131,22 @@ impl PerfSampler {
         let mut path_w: Vec<u16> = path.encode_utf16().chain(std::iter::once(0)).collect();
         let mut counter: PdhCounter = std::ptr::null_mut();
         let r = PdhAddCounterW(q, path_w.as_ptr(), 0, &mut counter);
-        if r != 0 { return Err(Error::win32(r as i32, format!("PdhAddCounterW {path}"))); }
+        if r != 0 {
+            return Err(Error::win32(r as i32, format!("PdhAddCounterW {path}")));
+        }
         Ok(counter)
     }
 
     pub fn sample(&self) -> Result<PerfSample> {
         let mut g = self.inner.lock();
-        let inner = g.as_mut().ok_or_else(|| Error::Other("sampler not open".into()))?;
+        let inner = g
+            .as_mut()
+            .ok_or_else(|| Error::Other("sampler not open".into()))?;
         unsafe {
             let r = PdhCollectQueryData(inner.query);
-            if r != 0 { return Err(Error::win32(r as i32, "PdhCollectQueryData")); }
+            if r != 0 {
+                return Err(Error::win32(r as i32, "PdhCollectQueryData"));
+            }
             let cpu = read_counter(inner.cpu_total)?;
             let _ = read_counter(inner.mem_avail);
             let dr = read_counter(inner.disk_read).unwrap_or(0.0);
@@ -146,7 +174,9 @@ impl PerfSampler {
 unsafe fn read_counter(h: PdhCounter) -> Result<f64> {
     let mut val: PdhFmtCountervalue = std::mem::zeroed();
     let r = PdhGetFormattedCounterValue(h, PDH_FMT_DOUBLE, std::ptr::null_mut(), &mut val);
-    if r != 0 { return Err(Error::win32(r as i32, "PdhGetFormattedCounterValue")); }
+    if r != 0 {
+        return Err(Error::win32(r as i32, "PdhGetFormattedCounterValue"));
+    }
     Ok(val.value.double_value)
 }
 
@@ -164,7 +194,9 @@ impl Drop for PerfInner {
 
 fn now_ms() -> u64 {
     #[link(name = "kernel32")]
-    extern "system" { fn GetTickCount64() -> u64; }
+    extern "system" {
+        fn GetTickCount64() -> u64;
+    }
     unsafe { GetTickCount64() }
 }
 

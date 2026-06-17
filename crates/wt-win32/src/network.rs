@@ -68,16 +68,41 @@ pub fn tcp_connections() -> Result<Vec<TcpRow>> {
     unsafe {
         let mut out = Vec::new();
         let mut size: u32 = 0;
-        let r = GetExtendedTcpTable(std::ptr::null_mut(), &mut size, 0, AF_INET, TCP_TABLE_OWNER_PID_ALL, 0);
-        if r != 0 && r != 122 { return Ok(out); } // 122 = ERROR_INSUFFICIENT_BUFFER
-        if size == 0 { return Ok(out); }
+        let r = GetExtendedTcpTable(
+            std::ptr::null_mut(),
+            &mut size,
+            0,
+            AF_INET,
+            TCP_TABLE_OWNER_PID_ALL,
+            0,
+        );
+        if r != 0 && r != 122 {
+            return Ok(out);
+        } // 122 = ERROR_INSUFFICIENT_BUFFER
+        if size == 0 {
+            return Ok(out);
+        }
         let mut buf = vec![0u8; size as usize];
-        let r = GetExtendedTcpTable(buf.as_mut_ptr(), &mut size, 0, AF_INET, TCP_TABLE_OWNER_PID_ALL, 0);
-        if r != 0 { return Ok(out); }
+        let r = GetExtendedTcpTable(
+            buf.as_mut_ptr(),
+            &mut size,
+            0,
+            AF_INET,
+            TCP_TABLE_OWNER_PID_ALL,
+            0,
+        );
+        if r != 0 {
+            return Ok(out);
+        }
         let count = u32::from_le_bytes([buf[0], buf[1], buf[2], buf[3]]);
         let entry_size = mem::size_of::<MibTcpRowOwnerPid>();
-        if buf.len() < 4 + (count as usize) * entry_size { return Ok(out); }
-        let entries = std::slice::from_raw_parts(buf.as_ptr().add(4) as *const MibTcpRowOwnerPid, count as usize);
+        if buf.len() < 4 + (count as usize) * entry_size {
+            return Ok(out);
+        }
+        let entries = std::slice::from_raw_parts(
+            buf.as_ptr().add(4) as *const MibTcpRowOwnerPid,
+            count as usize,
+        );
         for e in entries {
             out.push(TcpRow {
                 local: format_v4(e.local_addr),
@@ -96,16 +121,41 @@ pub fn udp_endpoints() -> Result<Vec<UdpRow>> {
     unsafe {
         let mut out = Vec::new();
         let mut size: u32 = 0;
-        let r = GetExtendedUdpTable(std::ptr::null_mut(), &mut size, 0, AF_INET, UDP_TABLE_OWNER_PID, 0);
-        if r != 0 && r != 122 { return Ok(out); }
-        if size == 0 { return Ok(out); }
+        let r = GetExtendedUdpTable(
+            std::ptr::null_mut(),
+            &mut size,
+            0,
+            AF_INET,
+            UDP_TABLE_OWNER_PID,
+            0,
+        );
+        if r != 0 && r != 122 {
+            return Ok(out);
+        }
+        if size == 0 {
+            return Ok(out);
+        }
         let mut buf = vec![0u8; size as usize];
-        let r = GetExtendedUdpTable(buf.as_mut_ptr(), &mut size, 0, AF_INET, UDP_TABLE_OWNER_PID, 0);
-        if r != 0 { return Ok(out); }
+        let r = GetExtendedUdpTable(
+            buf.as_mut_ptr(),
+            &mut size,
+            0,
+            AF_INET,
+            UDP_TABLE_OWNER_PID,
+            0,
+        );
+        if r != 0 {
+            return Ok(out);
+        }
         let count = u32::from_le_bytes([buf[0], buf[1], buf[2], buf[3]]);
         let entry_size = mem::size_of::<MibUdpRowOwnerPid>();
-        if buf.len() < 4 + (count as usize) * entry_size { return Ok(out); }
-        let entries = std::slice::from_raw_parts(buf.as_ptr().add(4) as *const MibUdpRowOwnerPid, count as usize);
+        if buf.len() < 4 + (count as usize) * entry_size {
+            return Ok(out);
+        }
+        let entries = std::slice::from_raw_parts(
+            buf.as_ptr().add(4) as *const MibUdpRowOwnerPid,
+            count as usize,
+        );
         for e in entries {
             out.push(UdpRow {
                 local: format_v4(e.local_addr),
@@ -145,7 +195,11 @@ fn tcp_state_name(state: u32) -> String {
 mod tests {
     use super::*;
     #[test]
-    fn lists_tcp() { assert!(tcp_connections().is_ok()); }
+    fn lists_tcp() {
+        assert!(tcp_connections().is_ok());
+    }
     #[test]
-    fn lists_udp() { assert!(udp_endpoints().is_ok()); }
+    fn lists_udp() {
+        assert!(udp_endpoints().is_ok());
+    }
 }

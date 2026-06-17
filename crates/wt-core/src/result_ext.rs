@@ -10,7 +10,9 @@ pub trait OptionExt<T> {
 
 impl<T> OptionExt<T> for Option<T> {
     fn some_or_not_found(self, resource: impl Into<String>) -> Result<T> {
-        self.ok_or_else(|| Error::NotFound { resource: resource.into() })
+        self.ok_or_else(|| Error::NotFound {
+            resource: resource.into(),
+        })
     }
 }
 

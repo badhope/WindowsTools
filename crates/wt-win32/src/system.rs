@@ -1,14 +1,14 @@
 //! System information: OS version, hostname, user SID, uptime, integrity.
 
+use crate::util::wide_to_string;
 use chrono::{DateTime, TimeZone, Utc};
 use serde::{Deserialize, Serialize};
 use windows::Win32::Foundation::{CloseHandle, HANDLE};
 use windows::Win32::System::SystemInformation::{
-    GetComputerNameExW, GetTickCount64, ComputerNamePhysicalDnsHostname,
+    ComputerNamePhysicalDnsHostname, GetComputerNameExW, GetTickCount64,
 };
 use windows::Win32::System::WindowsProgramming::GetUserNameW;
 use wt_core::{Error, Result};
-use crate::util::wide_to_string;
 
 /// A high-level snapshot of the host.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -29,11 +29,21 @@ pub struct SystemSnapshot {
 /// Read the local computer name (physical DNS hostname).
 pub fn computer_name() -> Result<String> {
     let mut size: u32 = 0;
-    let _ = unsafe { GetComputerNameExW(ComputerNamePhysicalDnsHostname, windows::core::PWSTR(std::ptr::null_mut()), &mut size) };
+    let _ = unsafe {
+        GetComputerNameExW(
+            ComputerNamePhysicalDnsHostname,
+            windows::core::PWSTR(std::ptr::null_mut()),
+            &mut size,
+        )
+    };
     let mut buf = vec![0u16; size as usize + 1];
     unsafe {
-        GetComputerNameExW(ComputerNamePhysicalDnsHostname, windows::core::PWSTR(buf.as_mut_ptr()), &mut size)
-            .map_err(|e| Error::win32(e.code().0, "GetComputerNameExW"))?;
+        GetComputerNameExW(
+            ComputerNamePhysicalDnsHostname,
+            windows::core::PWSTR(buf.as_mut_ptr()),
+            &mut size,
+        )
+        .map_err(|e| Error::win32(e.code().0, "GetComputerNameExW"))?;
     }
     Ok(wide_to_string(&buf))
 }
@@ -56,8 +66,8 @@ pub fn current_pid() -> u32 {
 
 /// Read the current process token's linked SID as a string.
 pub fn user_sid() -> Result<String> {
-    use windows::Win32::System::Threading::{GetCurrentProcess, OpenProcessToken};
     use windows::Win32::Security::{GetTokenInformation, TokenUser, TOKEN_QUERY};
+    use windows::Win32::System::Threading::{GetCurrentProcess, OpenProcessToken};
     let mut token = HANDLE::default();
     unsafe { OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &mut token) }
         .map_err(|e| Error::win32(e.code().0, "OpenProcessToken"))?;
@@ -69,10 +79,19 @@ pub fn user_sid() -> Result<String> {
         return Err(crate::util::last_error("GetTokenInformation size"));
     }
     let mut buf = vec![0u8; needed as usize];
-    unsafe { GetTokenInformation(token, TokenUser, Some(buf.as_mut_ptr() as _), needed, &mut needed) }
-        .map_err(|e| Error::win32(e.code().0, "GetTokenInformation"))?;
+    unsafe {
+        GetTokenInformation(
+            token,
+            TokenUser,
+            Some(buf.as_mut_ptr() as _),
+            needed,
+            &mut needed,
+        )
+    }
+    .map_err(|e| Error::win32(e.code().0, "GetTokenInformation"))?;
 
-    let tu: &windows::Win32::Security::TOKEN_USER = unsafe { &*(buf.as_ptr() as *const windows::Win32::Security::TOKEN_USER) };
+    let tu: &windows::Win32::Security::TOKEN_USER =
+        unsafe { &*(buf.as_ptr() as *const windows::Win32::Security::TOKEN_USER) };
     let sid = tu.User.Sid;
     if sid.0.is_null() {
         return Err(Error::Other("null SID from GetTokenInformation".into()));
@@ -83,10 +102,11 @@ pub fn user_sid() -> Result<String> {
     if pwstr.0.is_null() {
         return Err(Error::Other("null SID string".into()));
     }
-    let s = unsafe { widestring::U16CStr::from_ptr_str(pwstr.0) }
-        .to_string_lossy();
+    let s = unsafe { widestring::U16CStr::from_ptr_str(pwstr.0) }.to_string_lossy();
     unsafe {
-        let _ = windows::Win32::Foundation::LocalFree(windows::Win32::Foundation::HLOCAL(pwstr.0 as *mut _));
+        let _ = windows::Win32::Foundation::LocalFree(windows::Win32::Foundation::HLOCAL(
+            pwstr.0 as *mut _,
+        ));
     }
     Ok(s)
 }
@@ -95,12 +115,17 @@ pub fn user_sid() -> Result<String> {
 /// all Windows versions where the registry is intact).
 pub fn os_version() -> Result<(u32, u32, u32, String, String)> {
     use crate::registry::Hive;
-    let lm = crate::registry::open_key(Hive::LocalMachine, r"SOFTWARE\Microsoft\Windows NT\CurrentVersion", false)?;
+    let lm = crate::registry::open_key(
+        Hive::LocalMachine,
+        r"SOFTWARE\Microsoft\Windows NT\CurrentVersion",
+        false,
+    )?;
     let major = crate::registry::read_dword(&lm, "CurrentMajorVersionNumber").unwrap_or(0);
     let minor = crate::registry::read_dword(&lm, "CurrentMinorVersionNumber").unwrap_or(0);
     let build_str = crate::registry::read_string(&lm, "CurrentBuild").unwrap_or_default();
     let build: u32 = build_str.parse().unwrap_or(0);
-    let product = crate::registry::read_string(&lm, "ProductName").unwrap_or_else(|_| "Windows".into());
+    let product =
+        crate::registry::read_string(&lm, "ProductName").unwrap_or_else(|_| "Windows".into());
     let display = crate::registry::read_string(&lm, "DisplayVersion").unwrap_or_default();
     Ok((major, minor, build, product, display))
 }
@@ -119,7 +144,8 @@ pub fn now_utc() -> DateTime<Utc> {
 
 /// Build a complete snapshot.
 pub fn snapshot() -> Result<SystemSnapshot> {
-    let (major, minor, build, product, display) = os_version().unwrap_or((0, 0, 0, "Windows".into(), String::new()));
+    let (major, minor, build, product, display) =
+        os_version().unwrap_or((0, 0, 0, "Windows".into(), String::new()));
     let full_display = if display.is_empty() {
         format!("{product} (build {build})")
     } else {
@@ -129,7 +155,9 @@ pub fn snapshot() -> Result<SystemSnapshot> {
         computer_name: computer_name().unwrap_or_default(),
         user_name: user_name().unwrap_or_default(),
         user_sid: user_sid().unwrap_or_default(),
-        major, minor, build,
+        major,
+        minor,
+        build,
         display: full_display,
         edition: product,
         uptime_seconds: uptime_seconds(),

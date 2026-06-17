@@ -73,7 +73,10 @@ pub enum Error {
 impl Error {
     /// Construct a Win32 error from a HRESULT-like code.
     pub fn win32(code: i32, context: impl Into<String>) -> Self {
-        Self::Win32 { code, context: context.into() }
+        Self::Win32 {
+            code,
+            context: context.into(),
+        }
     }
 
     /// Construct from a `&str`.
@@ -90,7 +93,9 @@ impl Error {
 impl From<io::Error> for Error {
     fn from(e: io::Error) -> Self {
         match e.kind() {
-            io::ErrorKind::NotFound => Self::NotFound { resource: e.to_string() },
+            io::ErrorKind::NotFound => Self::NotFound {
+                resource: e.to_string(),
+            },
             io::ErrorKind::PermissionDenied => Self::PermissionDenied {
                 resource: "<io>".into(),
                 reason: e.to_string(),

@@ -14,33 +14,41 @@ pub fn registry_get(path: String, name: String) -> wt_core::Result<serde_json::V
 #[tauri::command]
 pub fn registry_set(args: crate::types::RegistrySetArgs) -> wt_core::Result<()> {
     let p = parse_path(&args.path)?;
-    rpc::call("registry.set_value", params([
-        ("path",     serde_json::json!(p)),
-        ("name",     serde_json::json!(args.name)),
-        ("kind",     serde_json::json!(args.kind)),
-        ("data_b64", serde_json::json!(args.data_b64)),
-    ]))?;
+    rpc::call(
+        "registry.set_value",
+        params([
+            ("path", serde_json::json!(p)),
+            ("name", serde_json::json!(args.name)),
+            ("kind", serde_json::json!(args.kind)),
+            ("data_b64", serde_json::json!(args.data_b64)),
+        ]),
+    )?;
     Ok(())
 }
 
 #[tauri::command]
 pub fn registry_delete_value(args: RegistryPathArgs) -> wt_core::Result<()> {
     let p = parse_path(&args.path)?;
-    let name = args.name.as_deref()
-        .ok_or_else(|| wt_core::Error::InvalidInput("registry.delete_value requires a `name`".into()))?;
-    rpc::call("registry.delete_value", params([
-        ("path", serde_json::json!(p)),
-        ("name", serde_json::json!(name)),
-    ]))?;
+    let name = args.name.as_deref().ok_or_else(|| {
+        wt_core::Error::InvalidInput("registry.delete_value requires a `name`".into())
+    })?;
+    rpc::call(
+        "registry.delete_value",
+        params([
+            ("path", serde_json::json!(p)),
+            ("name", serde_json::json!(name)),
+        ]),
+    )?;
     Ok(())
 }
 
 #[tauri::command]
 pub fn registry_delete_tree(args: RegistryPathArgs) -> wt_core::Result<()> {
     let p = parse_path(&args.path)?;
-    rpc::call("registry.delete_tree", params([
-        ("path", serde_json::json!(p)),
-    ]))?;
+    rpc::call(
+        "registry.delete_tree",
+        params([("path", serde_json::json!(p))]),
+    )?;
     Ok(())
 }
 

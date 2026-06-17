@@ -14,7 +14,10 @@ pub struct Volume {
     pub kind: String,
 }
 
-const DRIVE_LETTERS: &[char] = &['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
+const DRIVE_LETTERS: &[char] = &[
+    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S',
+    'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+];
 
 const FILE_SHARE_READ: u32 = 0x00000001;
 const FILE_SHARE_WRITE: u32 = 0x00000002;
@@ -72,15 +75,25 @@ pub fn list() -> Result<Vec<Volume>> {
             6 => "Ramdisk",
             _ => "Unknown",
         };
-        if kind_code == 1 || kind_code == 0 { continue; }
+        if kind_code == 1 || kind_code == 0 {
+            continue;
+        }
         let mut free: u64 = 0;
         let mut total: u64 = 0;
         let mut avail: u64 = 0;
-        let ok = unsafe { GetDiskFreeSpaceExW(mount_w.as_ptr(), &mut avail, &mut total, &mut free) };
-        if ok == 0 { continue; }
+        let ok =
+            unsafe { GetDiskFreeSpaceExW(mount_w.as_ptr(), &mut avail, &mut total, &mut free) };
+        if ok == 0 {
+            continue;
+        }
         let (label, fs) = read_label_fs(&mount_w);
         out.push(Volume {
-            mount_point: mount, label, fs, total_bytes: total, free_bytes: free, kind: kind.to_string(),
+            mount_point: mount,
+            label,
+            fs,
+            total_bytes: total,
+            free_bytes: free,
+            kind: kind.to_string(),
         });
     }
     Ok(out)
@@ -89,22 +102,38 @@ pub fn list() -> Result<Vec<Volume>> {
 fn read_label_fs(mount_w: &[u16]) -> (String, String) {
     unsafe {
         let h = CreateFileW(
-            mount_w.as_ptr(), 0, FILE_SHARE_READ | FILE_SHARE_WRITE,
-            std::ptr::null_mut(), OPEN_EXISTING, 0, std::ptr::null_mut(),
+            mount_w.as_ptr(),
+            0,
+            FILE_SHARE_READ | FILE_SHARE_WRITE,
+            std::ptr::null_mut(),
+            OPEN_EXISTING,
+            0,
+            std::ptr::null_mut(),
         );
-        if h.is_null() || h == INVALID_HANDLE_VALUE { return (String::new(), String::new()); }
+        if h.is_null() || h == INVALID_HANDLE_VALUE {
+            return (String::new(), String::new());
+        }
         let mut name = vec![0u16; 261];
         let mut fs = vec![0u16; 261];
         let mut serial: u32 = 0;
         let mut max_comp: u32 = 0;
         let mut flags: u32 = 0;
         let ok = GetVolumeInformationByHandleW(
-            h, name.as_mut_ptr(), name.len() as u32,
-            &mut serial, &mut max_comp, &mut flags,
-            fs.as_mut_ptr(), fs.len() as u32,
+            h,
+            name.as_mut_ptr(),
+            name.len() as u32,
+            &mut serial,
+            &mut max_comp,
+            &mut flags,
+            fs.as_mut_ptr(),
+            fs.len() as u32,
         );
         CloseHandle(h);
-        if ok == 0 { (String::new(), String::new()) } else { (wide_to_string(&name), wide_to_string(&fs)) }
+        if ok == 0 {
+            (String::new(), String::new())
+        } else {
+            (wide_to_string(&name), wide_to_string(&fs))
+        }
     }
 }
 

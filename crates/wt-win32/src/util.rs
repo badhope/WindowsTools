@@ -20,7 +20,9 @@ pub fn wide_null_os(s: &std::ffi::OsStr) -> Vec<u16> {
 /// Convert a null-terminated UTF-16 buffer to `String`, with lossy fallback.
 pub fn wide_to_string(buf: &[u16]) -> String {
     let len = buf.iter().position(|&c| c == 0).unwrap_or(buf.len());
-    OsString::from_wide(&buf[..len]).to_string_lossy().into_owned()
+    OsString::from_wide(&buf[..len])
+        .to_string_lossy()
+        .into_owned()
 }
 
 /// Return the current thread's last-error as our `Error` with a context.

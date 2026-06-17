@@ -4,11 +4,11 @@
 //! be forwarded to the service (SYSTEM).
 
 use windows::Win32::Foundation::{CloseHandle, HANDLE, WIN32_ERROR};
-use windows::Win32::System::Threading::{GetCurrentProcess, OpenProcessToken};
 use windows::Win32::Security::{
-    GetTokenInformation, TokenElevation, TokenIntegrityLevel, TOKEN_QUERY,
-    TOKEN_ELEVATION, TOKEN_MANDATORY_LABEL,
+    GetTokenInformation, TokenElevation, TokenIntegrityLevel, TOKEN_ELEVATION,
+    TOKEN_MANDATORY_LABEL, TOKEN_QUERY,
 };
+use windows::Win32::System::Threading::{GetCurrentProcess, OpenProcessToken};
 use wt_core::{Error, Integrity, Result};
 
 /// Returns `true` if the current process has an elevated (admin / system) token.
@@ -45,8 +45,16 @@ pub fn integrity_level() -> Result<Integrity> {
         return Err(crate::util::last_error("GetTokenInformation size"));
     }
     let mut buf = vec![0u8; needed as usize];
-    unsafe { GetTokenInformation(token, TokenIntegrityLevel, Some(buf.as_mut_ptr() as _), needed, &mut needed) }
-        .map_err(|e| Error::win32(e.code().0, "GetTokenInformation"))?;
+    unsafe {
+        GetTokenInformation(
+            token,
+            TokenIntegrityLevel,
+            Some(buf.as_mut_ptr() as _),
+            needed,
+            &mut needed,
+        )
+    }
+    .map_err(|e| Error::win32(e.code().0, "GetTokenInformation"))?;
 
     let tml: &TOKEN_MANDATORY_LABEL = unsafe { &*(buf.as_ptr() as *const TOKEN_MANDATORY_LABEL) };
     let sid = tml.Label.Sid;
@@ -92,7 +100,11 @@ pub fn relaunch_elevated() -> Result<u32> {
     };
     unsafe { ShellExecuteExW(&mut info) }
         .map_err(|e| Error::win32(e.code().0, "ShellExecuteExW"))?;
-    let pid = if info.hProcess.0.is_null() { 0 } else { info.hProcess.0 as u32 };
+    let pid = if info.hProcess.0.is_null() {
+        0
+    } else {
+        info.hProcess.0 as u32
+    };
     Ok(pid)
 }
 
@@ -106,14 +118,34 @@ pub fn user_sid() -> Result<String> {
 
     use windows::Win32::Security::TOKEN_USER;
     let mut needed: u32 = 0;
-    let _ = unsafe { GetTokenInformation(token, windows::Win32::Security::TokenUser, None, 0, &mut needed) };
-    if needed == 0 { return Err(crate::util::last_error("GetTokenInformation size")); }
+    let _ = unsafe {
+        GetTokenInformation(
+            token,
+            windows::Win32::Security::TokenUser,
+            None,
+            0,
+            &mut needed,
+        )
+    };
+    if needed == 0 {
+        return Err(crate::util::last_error("GetTokenInformation size"));
+    }
     let mut buf = vec![0u8; needed as usize];
-    unsafe { GetTokenInformation(token, windows::Win32::Security::TokenUser, Some(buf.as_mut_ptr() as _), needed, &mut needed) }
-        .map_err(|e| Error::win32(e.code().0, "GetTokenInformation"))?;
+    unsafe {
+        GetTokenInformation(
+            token,
+            windows::Win32::Security::TokenUser,
+            Some(buf.as_mut_ptr() as _),
+            needed,
+            &mut needed,
+        )
+    }
+    .map_err(|e| Error::win32(e.code().0, "GetTokenInformation"))?;
     let tu: &TOKEN_USER = unsafe { &*(buf.as_ptr() as *const TOKEN_USER) };
     let sid = tu.User.Sid;
-    if sid.0.is_null() { return Err(Error::Other("null SID".into())); }
+    if sid.0.is_null() {
+        return Err(Error::Other("null SID".into()));
+    }
 
     #[link(name = "advapi32")]
     extern "system" {
@@ -122,10 +154,16 @@ pub fn user_sid() -> Result<String> {
     use std::ffi::c_void;
     let mut ptr: *mut u16 = std::ptr::null_mut();
     let ok = unsafe { ConvertSidToStringSidW(sid.0, &mut ptr) };
-    if ok == 0 || ptr.is_null() { return Err(crate::util::last_error("ConvertSidToStringSidW")); }
+    if ok == 0 || ptr.is_null() {
+        return Err(crate::util::last_error("ConvertSidToStringSidW"));
+    }
     let len = (0..).find(|&i| unsafe { *ptr.add(i) } == 0).unwrap_or(0);
     let s = String::from_utf16_lossy(unsafe { std::slice::from_raw_parts(ptr, len) });
-    unsafe { windows::Win32::Foundation::LocalFree(windows::Win32::Foundation::HLOCAL(ptr as *mut c_void)) };
+    unsafe {
+        windows::Win32::Foundation::LocalFree(windows::Win32::Foundation::HLOCAL(
+            ptr as *mut c_void,
+        ))
+    };
     Ok(s)
 }
 

@@ -24,7 +24,9 @@ where
         .name("wt-stream".into())
         .spawn(move || loop {
             if let Some(v) = sample() {
-                if channel.send(v).is_err() { return; }
+                if channel.send(v).is_err() {
+                    return;
+                }
             }
             std::thread::sleep(interval);
         })

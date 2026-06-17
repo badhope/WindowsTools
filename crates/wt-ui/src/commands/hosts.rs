@@ -10,7 +10,9 @@ pub fn hosts_list() -> wt_core::Result<serde_json::Value> {
 
 #[tauri::command]
 pub fn hosts_write(args: HostsWriteArgs) -> wt_core::Result<()> {
-    let entries: Vec<wt_win32::hosts::HostsEntry> = args.entries.into_iter()
+    let entries: Vec<wt_win32::hosts::HostsEntry> = args
+        .entries
+        .into_iter()
         .map(crate::types::HostsEntryWire::into)
         .collect();
     wt_win32::hosts::write_entries(&entries)

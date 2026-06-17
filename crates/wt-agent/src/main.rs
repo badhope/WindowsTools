@@ -53,7 +53,11 @@ fn main() -> ExitCode {
 
 fn status() -> wt_core::Result<()> {
     let running = sc_query_state(wt_agent::SERVICE_NAME)?;
-    println!("service {}: {}", wt_agent::SERVICE_NAME, if running { "RUNNING" } else { "STOPPED" });
+    println!(
+        "service {}: {}",
+        wt_agent::SERVICE_NAME,
+        if running { "RUNNING" } else { "STOPPED" }
+    );
     Ok(())
 }
 
@@ -89,7 +93,9 @@ fn sc_query_state(name: &str) -> wt_core::Result<bool> {
 fn init_tracing() {
     use tracing_subscriber::EnvFilter;
     let _ = tracing_subscriber::fmt()
-        .with_env_filter(EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("warn")))
+        .with_env_filter(
+            EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("warn")),
+        )
         .with_target(false)
         .with_writer(std::io::stderr)
         .try_init();

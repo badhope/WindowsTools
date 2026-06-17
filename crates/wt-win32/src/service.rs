@@ -78,7 +78,11 @@ extern "system" {
         dw_desired_access: u32,
     ) -> ScHandle;
     fn CloseServiceHandle(h_sc_object: ScHandle) -> i32;
-    fn OpenServiceW(h_sc_manager: ScHandle, lp_service_name: *const u16, dw_desired_access: u32) -> ScHandle;
+    fn OpenServiceW(
+        h_sc_manager: ScHandle,
+        lp_service_name: *const u16,
+        dw_desired_access: u32,
+    ) -> ScHandle;
     fn EnumServicesStatusExW(
         h_sc_manager: ScHandle,
         info_level: u32,
@@ -104,8 +108,16 @@ extern "system" {
         cb_buf_size: u32,
         pcb_bytes_needed: *mut u32,
     ) -> i32;
-    fn StartServiceW(h_service: ScHandle, dw_num_service_args: u32, lp_service_arg_vectors: *const *const u16) -> i32;
-    fn ControlService(h_service: ScHandle, dw_control: u32, lp_service_status: *mut ServiceStatus) -> i32;
+    fn StartServiceW(
+        h_service: ScHandle,
+        dw_num_service_args: u32,
+        lp_service_arg_vectors: *const *const u16,
+    ) -> i32;
+    fn ControlService(
+        h_service: ScHandle,
+        dw_control: u32,
+        lp_service_status: *mut ServiceStatus,
+    ) -> i32;
     fn ChangeServiceConfigW(
         h_service: ScHandle,
         dw_service_type: u32,
@@ -177,7 +189,9 @@ pub fn list_status_only() -> Result<Vec<ServiceRow>> {
 pub fn config_of(name: &str) -> Result<ServiceConfig> {
     unsafe {
         let scm = OpenSCManagerW(std::ptr::null(), std::ptr::null(), SC_MANAGER_CONNECT);
-        if scm.is_null() { return Err(Error::Other("OpenSCManagerW failed".into())); }
+        if scm.is_null() {
+            return Err(Error::Other("OpenSCManagerW failed".into()));
+        }
         let _g = ScmGuard(scm);
         let svc = open_service(scm, name, SERVICE_QUERY_CONFIG | SERVICE_QUERY_STATUS)?;
         let _h = ScHandleGuard(svc);
@@ -195,45 +209,88 @@ pub fn config_of(name: &str) -> Result<ServiceConfig> {
         }
 
         let mut needed2: u32 = 0;
-        let _ = QueryServiceConfig2W(svc, SERVICE_CONFIG_DESCRIPTION, std::ptr::null_mut(), 0, &mut needed2);
+        let _ = QueryServiceConfig2W(
+            svc,
+            SERVICE_CONFIG_DESCRIPTION,
+            std::ptr::null_mut(),
+            0,
+            &mut needed2,
+        );
         let mut description = String::new();
         if needed2 > 0 {
             let mut buf2 = vec![0u8; needed2 as usize];
-            let r = QueryServiceConfig2W(svc, SERVICE_CONFIG_DESCRIPTION, buf2.as_mut_ptr(), needed2, &mut needed2);
+            let r = QueryServiceConfig2W(
+                svc,
+                SERVICE_CONFIG_DESCRIPTION,
+                buf2.as_mut_ptr(),
+                needed2,
+                &mut needed2,
+            );
             if r != 0 {
                 let s = &*(buf2.as_ptr() as *const ServiceDescriptionW);
                 description = read_wide_ptr(s.lp_description);
             }
         }
-        Ok(ServiceConfig { start_type, description })
+        Ok(ServiceConfig {
+            start_type,
+            description,
+        })
     }
 }
 
 fn enumerate_then(skip_enrich: bool) -> Result<Vec<ServiceRow>> {
     unsafe {
-        let scm = OpenSCManagerW(std::ptr::null(), std::ptr::null(), SC_MANAGER_ENUMERATE_SERVICE | SC_MANAGER_CONNECT);
-        if scm.is_null() { return Err(Error::Other("OpenSCManagerW failed".into())); }
+        let scm = OpenSCManagerW(
+            std::ptr::null(),
+            std::ptr::null(),
+            SC_MANAGER_ENUMERATE_SERVICE | SC_MANAGER_CONNECT,
+        );
+        if scm.is_null() {
+            return Err(Error::Other("OpenSCManagerW failed".into()));
+        }
         let _g = ScmGuard(scm);
 
         let mut needed: u32 = 0;
         let mut count: u32 = 0;
         let mut resume: u32 = 0;
         let _ = EnumServicesStatusExW(
-            scm, SC_ENUM_PROCESS_INFO, SERVICE_WIN32 | SERVICE_DRIVER, SERVICE_ACTIVE,
-            std::ptr::null_mut(), 0, &mut needed, &mut count, &mut resume, std::ptr::null(),
+            scm,
+            SC_ENUM_PROCESS_INFO,
+            SERVICE_WIN32 | SERVICE_DRIVER,
+            SERVICE_ACTIVE,
+            std::ptr::null_mut(),
+            0,
+            &mut needed,
+            &mut count,
+            &mut resume,
+            std::ptr::null(),
         );
         if needed == 0 {
             needed = 64 * 1024;
         }
         let mut buf = vec![0u8; needed as usize];
         let r = EnumServicesStatusExW(
-            scm, SC_ENUM_PROCESS_INFO, SERVICE_WIN32 | SERVICE_DRIVER, SERVICE_ACTIVE,
-            buf.as_mut_ptr(), needed, &mut needed, &mut count, &mut resume, std::ptr::null(),
+            scm,
+            SC_ENUM_PROCESS_INFO,
+            SERVICE_WIN32 | SERVICE_DRIVER,
+            SERVICE_ACTIVE,
+            buf.as_mut_ptr(),
+            needed,
+            &mut needed,
+            &mut count,
+            &mut resume,
+            std::ptr::null(),
         );
         if r == 0 {
-            return Err(Error::Other(format!("EnumServicesStatusExW failed: {}", std::io::Error::last_os_error())));
+            return Err(Error::Other(format!(
+                "EnumServicesStatusExW failed: {}",
+                std::io::Error::last_os_error()
+            )));
         }
-        let entries = std::slice::from_raw_parts(buf.as_ptr() as *const EnumServiceStatusProcessW, count as usize);
+        let entries = std::slice::from_raw_parts(
+            buf.as_ptr() as *const EnumServiceStatusProcessW,
+            count as usize,
+        );
         let mut out = Vec::with_capacity(count as usize);
         for e in entries {
             let name = read_wide_ptr(e.lp_service_name);
@@ -248,16 +305,34 @@ fn enumerate_then(skip_enrich: bool) -> Result<Vec<ServiceRow>> {
                 description: String::new(),
             });
         }
-        if skip_enrich { return Ok(out); }
+        if skip_enrich {
+            return Ok(out);
+        }
         // Enrich.
         for row in out.iter_mut() {
-            if let Ok(svc) = open_service(scm, &row.name, SERVICE_QUERY_CONFIG | SERVICE_QUERY_STATUS | SERVICE_QUERY_STATUS_CFG) {
+            if let Ok(svc) = open_service(
+                scm,
+                &row.name,
+                SERVICE_QUERY_CONFIG | SERVICE_QUERY_STATUS | SERVICE_QUERY_STATUS_CFG,
+            ) {
                 let _g = ScHandleGuard(svc);
                 let mut needed2: u32 = 0;
-                let _ = QueryServiceConfig2W(svc, SERVICE_CONFIG_DESCRIPTION, std::ptr::null_mut(), 0, &mut needed2);
+                let _ = QueryServiceConfig2W(
+                    svc,
+                    SERVICE_CONFIG_DESCRIPTION,
+                    std::ptr::null_mut(),
+                    0,
+                    &mut needed2,
+                );
                 if needed2 > 0 {
                     let mut buf2 = vec![0u8; needed2 as usize];
-                    let r = QueryServiceConfig2W(svc, SERVICE_CONFIG_DESCRIPTION, buf2.as_mut_ptr(), needed2, &mut needed2);
+                    let r = QueryServiceConfig2W(
+                        svc,
+                        SERVICE_CONFIG_DESCRIPTION,
+                        buf2.as_mut_ptr(),
+                        needed2,
+                        &mut needed2,
+                    );
                     if r != 0 {
                         let s = &*(buf2.as_ptr() as *const ServiceDescriptionW);
                         row.description = read_wide_ptr(s.lp_description);
@@ -282,7 +357,9 @@ fn enumerate_then(skip_enrich: bool) -> Result<Vec<ServiceRow>> {
 pub fn control(name: &str, action: &str) -> Result<()> {
     unsafe {
         let scm = OpenSCManagerW(std::ptr::null(), std::ptr::null(), SC_MANAGER_CONNECT);
-        if scm.is_null() { return Err(Error::Other("OpenSCManagerW failed".into())); }
+        if scm.is_null() {
+            return Err(Error::Other("OpenSCManagerW failed".into()));
+        }
         let _g = ScmGuard(scm);
         let name_w = wide_null(name);
         match action {
@@ -290,7 +367,12 @@ pub fn control(name: &str, action: &str) -> Result<()> {
                 let svc = open_service(scm, name, SERVICE_START)?;
                 let _g = ScHandleGuard(svc);
                 let r = StartServiceW(svc, 0, std::ptr::null());
-                if r == 0 { return Err(Error::Other(format!("StartServiceW: {}", std::io::Error::last_os_error()))); }
+                if r == 0 {
+                    return Err(Error::Other(format!(
+                        "StartServiceW: {}",
+                        std::io::Error::last_os_error()
+                    )));
+                }
                 Ok(())
             }
             "stop" => {
@@ -298,7 +380,12 @@ pub fn control(name: &str, action: &str) -> Result<()> {
                 let _g = ScHandleGuard(svc);
                 let mut status = ServiceStatus::default();
                 let r = ControlService(svc, SERVICE_CONTROL_STOP, &mut status);
-                if r == 0 { return Err(Error::Other(format!("ControlService: {}", std::io::Error::last_os_error()))); }
+                if r == 0 {
+                    return Err(Error::Other(format!(
+                        "ControlService: {}",
+                        std::io::Error::last_os_error()
+                    )));
+                }
                 Ok(())
             }
             "pause" => {
@@ -306,7 +393,12 @@ pub fn control(name: &str, action: &str) -> Result<()> {
                 let _g = ScHandleGuard(svc);
                 let mut status = ServiceStatus::default();
                 let r = ControlService(svc, SERVICE_CONTROL_PAUSE, &mut status);
-                if r == 0 { return Err(Error::Other(format!("ControlService: {}", std::io::Error::last_os_error()))); }
+                if r == 0 {
+                    return Err(Error::Other(format!(
+                        "ControlService: {}",
+                        std::io::Error::last_os_error()
+                    )));
+                }
                 Ok(())
             }
             "continue" => {
@@ -314,7 +406,12 @@ pub fn control(name: &str, action: &str) -> Result<()> {
                 let _g = ScHandleGuard(svc);
                 let mut status = ServiceStatus::default();
                 let r = ControlService(svc, SERVICE_CONTROL_CONTINUE, &mut status);
-                if r == 0 { return Err(Error::Other(format!("ControlService: {}", std::io::Error::last_os_error()))); }
+                if r == 0 {
+                    return Err(Error::Other(format!(
+                        "ControlService: {}",
+                        std::io::Error::last_os_error()
+                    )));
+                }
                 Ok(())
             }
             other => Err(Error::InvalidInput(format!("unknown action: {other}"))),
@@ -325,7 +422,9 @@ pub fn control(name: &str, action: &str) -> Result<()> {
 pub fn set_start_type(name: &str, start_type: &str) -> Result<()> {
     unsafe {
         let scm = OpenSCManagerW(std::ptr::null(), std::ptr::null(), SC_MANAGER_CONNECT);
-        if scm.is_null() { return Err(Error::Other("OpenSCManagerW failed".into())); }
+        if scm.is_null() {
+            return Err(Error::Other("OpenSCManagerW failed".into()));
+        }
         let _g = ScmGuard(scm);
         let svc = open_service(scm, name, SERVICE_CHANGE_CONFIG)?;
         let _g = ScHandleGuard(svc);
@@ -335,14 +434,31 @@ pub fn set_start_type(name: &str, start_type: &str) -> Result<()> {
             "auto" => SERVICE_AUTO_START,
             "demand" => SERVICE_DEMAND_START,
             "disabled" => SERVICE_DISABLED,
-            _ => return Err(Error::InvalidInput(format!("unknown start type: {start_type}"))),
+            _ => {
+                return Err(Error::InvalidInput(format!(
+                    "unknown start type: {start_type}"
+                )))
+            }
         };
         let r = ChangeServiceConfigW(
-            svc, SERVICE_NO_CHANGE, st, SERVICE_NO_CHANGE,
-            std::ptr::null(), std::ptr::null(), std::ptr::null(),
-            std::ptr::null(), std::ptr::null(), std::ptr::null(), std::ptr::null(),
+            svc,
+            SERVICE_NO_CHANGE,
+            st,
+            SERVICE_NO_CHANGE,
+            std::ptr::null(),
+            std::ptr::null(),
+            std::ptr::null(),
+            std::ptr::null(),
+            std::ptr::null(),
+            std::ptr::null(),
+            std::ptr::null(),
         );
-        if r == 0 { return Err(Error::Other(format!("ChangeServiceConfigW: {}", std::io::Error::last_os_error()))); }
+        if r == 0 {
+            return Err(Error::Other(format!(
+                "ChangeServiceConfigW: {}",
+                std::io::Error::last_os_error()
+            )));
+        }
         Ok(())
     }
 }
@@ -350,7 +466,12 @@ pub fn set_start_type(name: &str, start_type: &str) -> Result<()> {
 unsafe fn open_service(scm: ScHandle, name: &str, access: u32) -> Result<ScHandle> {
     let name_w = wide_null(name);
     let svc = OpenServiceW(scm, name_w.as_ptr(), access);
-    if svc.is_null() { return Err(Error::Other(format!("OpenServiceW {name}: {}", std::io::Error::last_os_error()))); }
+    if svc.is_null() {
+        return Err(Error::Other(format!(
+            "OpenServiceW {name}: {}",
+            std::io::Error::last_os_error()
+        )));
+    }
     Ok(svc)
 }
 
@@ -367,7 +488,9 @@ fn read_wide(buf: &[u16]) -> String {
 /// Used to dereference `lpServiceName` / `lpDisplayName`, which point
 /// into the caller's buffer.
 unsafe fn read_wide_ptr(p: *const u16) -> String {
-    if p.is_null() { return String::new(); }
+    if p.is_null() {
+        return String::new();
+    }
     let mut len = 0;
     while len < 32 * 1024 && *p.add(len) != 0 {
         len += 1;
@@ -386,7 +509,8 @@ fn state_name(state: u32) -> String {
         6 => "PAUSE_PENDING",
         7 => "PAUSED",
         _ => "UNKNOWN",
-    }.to_string()
+    }
+    .to_string()
 }
 
 fn start_type_name(st: u32) -> String {
@@ -397,13 +521,22 @@ fn start_type_name(st: u32) -> String {
         3 => "DEMAND",
         4 => "DISABLED",
         _ => "UNKNOWN",
-    }.to_string()
+    }
+    .to_string()
 }
 
 struct ScmGuard(ScHandle);
-impl Drop for ScmGuard { fn drop(&mut self) { unsafe { CloseServiceHandle(self.0) }; } }
+impl Drop for ScmGuard {
+    fn drop(&mut self) {
+        unsafe { CloseServiceHandle(self.0) };
+    }
+}
 struct ScHandleGuard(ScHandle);
-impl Drop for ScHandleGuard { fn drop(&mut self) { unsafe { CloseServiceHandle(self.0) }; } }
+impl Drop for ScHandleGuard {
+    fn drop(&mut self) {
+        unsafe { CloseServiceHandle(self.0) };
+    }
+}
 
 #[cfg(test)]
 mod tests {
