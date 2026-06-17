@@ -73,7 +73,7 @@ pub fn remove(ip: &str, hostname: &str) -> Result<()> {
             continue;
         };
         let mut hosts = it.collect::<Vec<_>>();
-        let mut matched = this_ip == ip && hosts.iter().any(|h| *h == hostname);
+        let matched = this_ip == ip && hosts.iter().any(|h| *h == hostname);
         if matched {
             hosts.retain(|h| *h != hostname);
         }

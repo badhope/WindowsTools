@@ -361,7 +361,6 @@ pub fn control(name: &str, action: &str) -> Result<()> {
             return Err(Error::Other("OpenSCManagerW failed".into()));
         }
         let _g = ScmGuard(scm);
-        let name_w = wide_null(name);
         match action {
             "start" => {
                 let svc = open_service(scm, name, SERVICE_START)?;

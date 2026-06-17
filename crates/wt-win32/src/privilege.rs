@@ -3,7 +3,7 @@
 //! Used to decide whether an operation should run in the agent (user) or
 //! be forwarded to the service (SYSTEM).
 
-use windows::Win32::Foundation::{CloseHandle, HANDLE, WIN32_ERROR};
+use windows::Win32::Foundation::{CloseHandle, HANDLE};
 use windows::Win32::Security::{
     GetTokenInformation, TokenElevation, TokenIntegrityLevel, TOKEN_ELEVATION,
     TOKEN_MANDATORY_LABEL, TOKEN_QUERY,
@@ -160,9 +160,9 @@ pub fn user_sid() -> Result<String> {
     let len = (0..).find(|&i| unsafe { *ptr.add(i) } == 0).unwrap_or(0);
     let s = String::from_utf16_lossy(unsafe { std::slice::from_raw_parts(ptr, len) });
     unsafe {
-        windows::Win32::Foundation::LocalFree(windows::Win32::Foundation::HLOCAL(
+        windows::Win32::Foundation::LocalFree(Some(windows::Win32::Foundation::HLOCAL(
             ptr as *mut c_void,
-        ))
+        )))
     };
     Ok(s)
 }

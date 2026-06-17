@@ -39,7 +39,7 @@ pub fn open_key(hive: Hive, sub: &str, writable: bool) -> Result<Key> {
         RegOpenKeyExW(
             HKEY(hive.hkey() as *mut _),
             windows::core::PCWSTR(sub_w.as_ptr()),
-            0,
+            Some(0),
             rights,
             &mut out,
         )
@@ -316,10 +316,10 @@ pub fn enum_subkeys(key: &Key) -> Result<Vec<String>> {
             RegEnumKeyExW(
                 key.0,
                 idx,
-                windows::core::PWSTR(name.as_mut_ptr()),
+                Some(windows::core::PWSTR(name.as_mut_ptr())),
                 &mut len,
                 None,
-                windows::core::PWSTR::null(),
+                Some(windows::core::PWSTR::null()),
                 None,
                 Some(&mut last_write),
             )
@@ -354,7 +354,7 @@ pub fn enum_values(key: &Key) -> Result<Vec<ValueInfo>> {
             RegEnumValueW(
                 key.0,
                 idx,
-                windows::core::PWSTR(name.as_mut_ptr()),
+                Some(windows::core::PWSTR(name.as_mut_ptr())),
                 &mut name_len,
                 None,
                 Some(&mut kind),
@@ -374,7 +374,7 @@ pub fn enum_values(key: &Key) -> Result<Vec<ValueInfo>> {
             RegEnumValueW(
                 key.0,
                 idx,
-                windows::core::PWSTR(name.as_mut_ptr()),
+                Some(windows::core::PWSTR(name.as_mut_ptr())),
                 &mut name_len2,
                 None,
                 Some(&mut kind),
@@ -506,7 +506,7 @@ fn write_reg_recursive(key: &Key, w: &mut impl std::io::Write, path: &[String]) 
             RegOpenKeyExW(
                 key.0,
                 windows::core::PCWSTR(sub_w.as_ptr()),
-                0,
+                Some(0),
                 KEY_ENUMERATE_SUB_KEYS | KEY_QUERY_VALUE,
                 &mut child,
             )
@@ -560,9 +560,8 @@ fn escape_reg(s: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::ffi::OsStr;
     use windows::Win32::System::Registry::{
-        RegCreateKeyExW, HKEY_CURRENT_USER, REG_OPTION_NON_VOLATILE, REG_SAM_FLAGS,
+        RegCreateKeyExW, HKEY_CURRENT_USER, REG_OPTION_NON_VOLATILE,
     };
 
     fn make_test_key(name: &str) -> String {
@@ -573,7 +572,7 @@ mod tests {
             RegCreateKeyExW(
                 HKEY_CURRENT_USER,
                 windows::core::PCWSTR(sub_w.as_ptr()),
-                0,
+                Some(0),
                 windows::core::PCWSTR::null(),
                 REG_OPTION_NON_VOLATILE,
                 KEY_READ | KEY_WRITE,

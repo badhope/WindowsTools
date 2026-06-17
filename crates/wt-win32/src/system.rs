@@ -3,7 +3,7 @@
 use crate::util::wide_to_string;
 use chrono::{DateTime, TimeZone, Utc};
 use serde::{Deserialize, Serialize};
-use windows::Win32::Foundation::{CloseHandle, HANDLE};
+use windows::Win32::Foundation::HANDLE;
 use windows::Win32::System::SystemInformation::{
     ComputerNamePhysicalDnsHostname, GetComputerNameExW, GetTickCount64,
 };
@@ -104,9 +104,9 @@ pub fn user_sid() -> Result<String> {
     }
     let s = unsafe { widestring::U16CStr::from_ptr_str(pwstr.0) }.to_string_lossy();
     unsafe {
-        let _ = windows::Win32::Foundation::LocalFree(windows::Win32::Foundation::HLOCAL(
+        let _ = windows::Win32::Foundation::LocalFree(Some(windows::Win32::Foundation::HLOCAL(
             pwstr.0 as *mut _,
-        ));
+        )));
     }
     Ok(s)
 }

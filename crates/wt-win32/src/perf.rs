@@ -128,7 +128,7 @@ impl PerfSampler {
     }
 
     unsafe fn add_counter(&self, q: PdhQuery, path: &str) -> Result<PdhCounter> {
-        let mut path_w: Vec<u16> = path.encode_utf16().chain(std::iter::once(0)).collect();
+        let path_w: Vec<u16> = path.encode_utf16().chain(std::iter::once(0)).collect();
         let mut counter: PdhCounter = std::ptr::null_mut();
         let r = PdhAddCounterW(q, path_w.as_ptr(), 0, &mut counter);
         if r != 0 {
