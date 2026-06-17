@@ -36,7 +36,11 @@ pub fn list() -> Result<Vec<HostsEntry>> {
         let mut it = core.split_whitespace();
         let Some(ip) = it.next() else { continue };
         for host in it {
-            out.push(HostsEntry { ip: ip.to_string(), hostname: host.to_string(), comment: comment.clone() });
+            out.push(HostsEntry {
+                ip: ip.to_string(),
+                hostname: host.to_string(),
+                comment: comment.clone(),
+            });
         }
     }
     Ok(out)
@@ -63,9 +67,13 @@ pub fn remove(ip: &str, hostname: &str) -> Result<()> {
             continue;
         }
         let mut it = trimmed.split_whitespace();
-        let Some(this_ip) = it.next() else { out.push_str(line); out.push('\n'); continue };
+        let Some(this_ip) = it.next() else {
+            out.push_str(line);
+            out.push('\n');
+            continue;
+        };
         let mut hosts = it.collect::<Vec<_>>();
-        let mut matched = this_ip == ip && hosts.iter().any(|h| *h == hostname);
+        let matched = this_ip == ip && hosts.contains(&hostname);
         if matched {
             hosts.retain(|h| *h != hostname);
         }
@@ -116,7 +124,8 @@ fn write_atomic(content: &str) -> Result<()> {
     let tmp = path.with_extension("hosts.tmp");
     {
         let mut f = fs::File::create(&tmp).map_err(|e| Error::Io(e.to_string()))?;
-        f.write_all(content.as_bytes()).map_err(|e| Error::Io(e.to_string()))?;
+        f.write_all(content.as_bytes())
+            .map_err(|e| Error::Io(e.to_string()))?;
         f.sync_all().map_err(|e| Error::Io(e.to_string()))?;
     }
     fs::rename(&tmp, &path).map_err(|e| Error::Io(e.to_string()))?;

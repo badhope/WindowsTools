@@ -87,11 +87,15 @@ pub struct PaletteSearchArgs {
     #[serde(default = "default_limit")]
     pub limit: usize,
 }
-fn default_limit() -> usize { 20 }
+fn default_limit() -> usize {
+    20
+}
 
 /// Generic Ok wrapper.
 #[derive(Debug, Clone, Serialize)]
-pub struct OkResponse { pub ok: bool }
+pub struct OkResponse {
+    pub ok: bool,
+}
 
 /// Wire form of a hosts-file entry sent from the frontend.
 /// `hostname` is a single name, but the frontend can send multiple

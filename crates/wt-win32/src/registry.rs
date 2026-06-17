@@ -3,15 +3,15 @@
 //! Backed entirely by `RegOpenKeyExW` / `RegQueryValueExW` / `RegSetValueExW` /
 //! `RegEnumKeyExW` / `RegEnumValueW` / `RegDeleteTreeW`. No PowerShell.
 
+use crate::util::{check, wide_to_string};
 use serde::{Deserialize, Serialize};
 use windows::Win32::System::Registry::{
-    RegCloseKey, RegDeleteTreeW, RegEnumKeyExW, RegEnumValueW, RegOpenKeyExW,
-    RegQueryValueExW, RegSetValueExW, HKEY, KEY_CREATE_SUB_KEY, KEY_ENUMERATE_SUB_KEYS,
-    KEY_QUERY_VALUE, KEY_READ, KEY_SET_VALUE, KEY_WRITE, REG_BINARY, REG_DWORD, REG_EXPAND_SZ,
-    REG_MULTI_SZ, REG_NONE, REG_QWORD, REG_SAM_FLAGS, REG_SZ, REG_VALUE_TYPE,
+    RegCloseKey, RegDeleteTreeW, RegEnumKeyExW, RegEnumValueW, RegOpenKeyExW, RegQueryValueExW,
+    RegSetValueExW, HKEY, KEY_CREATE_SUB_KEY, KEY_ENUMERATE_SUB_KEYS, KEY_QUERY_VALUE, KEY_READ,
+    KEY_SET_VALUE, KEY_WRITE, REG_BINARY, REG_DWORD, REG_EXPAND_SZ, REG_MULTI_SZ, REG_NONE,
+    REG_QWORD, REG_SAM_FLAGS, REG_SZ, REG_VALUE_TYPE,
 };
 use wt_core::{Error, Result};
-use crate::util::{check, wide_to_string};
 
 pub use wt_core::registry_path::{Hive, RegistryPath};
 
@@ -39,7 +39,7 @@ pub fn open_key(hive: Hive, sub: &str, writable: bool) -> Result<Key> {
         RegOpenKeyExW(
             HKEY(hive.hkey() as *mut _),
             windows::core::PCWSTR(sub_w.as_ptr()),
-            0,
+            Some(0),
             rights,
             &mut out,
         )
@@ -82,7 +82,11 @@ impl ValueData {
             ValueData::Dword(v) => format!("{v} (0x{v:08x})"),
             ValueData::Qword(v) => format!("{v} (0x{v:016x})"),
             ValueData::MultiSz(v) => v.join(" \u{2022} "),
-            ValueData::Binary(v) => v.iter().map(|b| format!("{b:02x}")).collect::<Vec<_>>().join(" "),
+            ValueData::Binary(v) => v
+                .iter()
+                .map(|b| format!("{b:02x}"))
+                .collect::<Vec<_>>()
+                .join(" "),
             ValueData::None => String::new(),
         }
     }
@@ -105,7 +109,9 @@ pub fn read_any(key: &Key, name: &str) -> Result<ValueData> {
         )
     };
     check(r, format!("RegQueryValueExW size {name}"))?;
-    if size == 0 { return Ok(ValueData::None); }
+    if size == 0 {
+        return Ok(ValueData::None);
+    }
     let mut buf = vec![0u8; size as usize];
     let r = unsafe {
         RegQueryValueExW(
@@ -123,24 +129,35 @@ pub fn read_any(key: &Key, name: &str) -> Result<ValueData> {
 
 fn decode_value_any(kind: REG_VALUE_TYPE, data: &[u8]) -> ValueData {
     match kind.0 {
-        1 => ValueData::Sz(decode_wide(data)),         // REG_SZ
-        2 => ValueData::ExpandSz(decode_wide(data)),   // REG_EXPAND_SZ
-        4 => {                                         // REG_DWORD
-            if data.len() < 4 { return ValueData::None; }
+        1 => ValueData::Sz(decode_wide(data)),       // REG_SZ
+        2 => ValueData::ExpandSz(decode_wide(data)), // REG_EXPAND_SZ
+        4 => {
+            // REG_DWORD
+            if data.len() < 4 {
+                return ValueData::None;
+            }
             ValueData::Dword(u32::from_le_bytes([data[0], data[1], data[2], data[3]]))
         }
-        11 => {                                        // REG_QWORD
-            if data.len() < 8 { return ValueData::None; }
+        11 => {
+            // REG_QWORD
+            if data.len() < 8 {
+                return ValueData::None;
+            }
             let mut b = [0u8; 8];
             b.copy_from_slice(&data[..8]);
             ValueData::Qword(u64::from_le_bytes(b))
         }
-        7 => {                                         // REG_MULTI_SZ
+        7 => {
+            // REG_MULTI_SZ
             let s = decode_wide(data);
-            let parts: Vec<String> = s.split('\0').filter(|p| !p.is_empty()).map(String::from).collect();
+            let parts: Vec<String> = s
+                .split('\0')
+                .filter(|p| !p.is_empty())
+                .map(String::from)
+                .collect();
             ValueData::MultiSz(parts)
         }
-        _ => ValueData::Binary(data.to_vec()),         // REG_BINARY + fallthrough
+        _ => ValueData::Binary(data.to_vec()), // REG_BINARY + fallthrough
     }
 }
 
@@ -150,7 +167,9 @@ fn decode_wide(bytes: &[u8]) -> String {
         v.push(u16::from_le_bytes([chunk[0], chunk[1]]));
     }
     let mut s = String::from_utf16_lossy(&v);
-    while s.ends_with('\0') { s.pop(); }
+    while s.ends_with('\0') {
+        s.pop();
+    }
     s
 }
 
@@ -172,7 +191,9 @@ pub fn read_string(key: &Key, name: &str) -> Result<String> {
     check(r, format!("RegQueryValueExW size {name}"))?;
     let kind_u = kind.0;
     if kind_u != REG_SZ.0 && kind_u != REG_EXPAND_SZ.0 {
-        return Err(Error::Other(format!("{name} is not a string (kind=0x{kind_u:x})")));
+        return Err(Error::Other(format!(
+            "{name} is not a string (kind=0x{kind_u:x})"
+        )));
     }
     let mut buf = vec![0u8; size as usize];
     let r = unsafe {
@@ -186,7 +207,10 @@ pub fn read_string(key: &Key, name: &str) -> Result<String> {
         )
     };
     check(r, format!("RegQueryValueExW read {name}"))?;
-    let words: Vec<u16> = buf.chunks_exact(2).map(|c| u16::from_le_bytes([c[0], c[1]])).collect();
+    let words: Vec<u16> = buf
+        .chunks_exact(2)
+        .map(|c| u16::from_le_bytes([c[0], c[1]]))
+        .collect();
     Ok(wide_to_string(&words))
 }
 
@@ -208,7 +232,10 @@ pub fn read_dword(key: &Key, name: &str) -> Result<u32> {
     };
     check(r, format!("RegQueryValueExW dword {name}"))?;
     if kind.0 != REG_DWORD.0 {
-        return Err(Error::Other(format!("{name} is not a REG_DWORD (kind=0x{:x})", kind.0)));
+        return Err(Error::Other(format!(
+            "{name} is not a REG_DWORD (kind=0x{:x})",
+            kind.0
+        )));
     }
     Ok(v)
 }
@@ -231,7 +258,10 @@ pub fn read_qword(key: &Key, name: &str) -> Result<u64> {
     };
     check(r, format!("RegQueryValueExW qword {name}"))?;
     if kind.0 != REG_QWORD.0 {
-        return Err(Error::Other(format!("{name} is not a REG_QWORD (kind=0x{:x})", kind.0)));
+        return Err(Error::Other(format!(
+            "{name} is not a REG_QWORD (kind=0x{:x})",
+            kind.0
+        )));
     }
     Ok(v)
 }
@@ -259,7 +289,7 @@ pub fn write_value(key: &Key, name: &str, data: &ValueData) -> Result<()> {
         RegSetValueExW(
             key.0,
             windows::core::PCWSTR(name_w.as_ptr()),
-            0,
+            Some(0),
             kind,
             Some(&bytes),
         )
@@ -268,7 +298,10 @@ pub fn write_value(key: &Key, name: &str, data: &ValueData) -> Result<()> {
 }
 
 fn encode_wide_bytes(s: &str) -> Vec<u8> {
-    s.encode_utf16().flat_map(|c| c.to_le_bytes()).chain(std::iter::once(0u16).flat_map(|c| c.to_le_bytes())).collect()
+    s.encode_utf16()
+        .flat_map(|c| c.to_le_bytes())
+        .chain(std::iter::once(0u16).flat_map(|c| c.to_le_bytes()))
+        .collect()
 }
 
 /// Enumerate immediate sub-keys (non-recursive).
@@ -283,15 +316,17 @@ pub fn enum_subkeys(key: &Key) -> Result<Vec<String>> {
             RegEnumKeyExW(
                 key.0,
                 idx,
-                windows::core::PWSTR(name.as_mut_ptr()),
+                Some(windows::core::PWSTR(name.as_mut_ptr())),
                 &mut len,
                 None,
-                windows::core::PWSTR::null(),
+                Some(windows::core::PWSTR::null()),
                 None,
                 Some(&mut last_write),
             )
         };
-        if r.0 == 259 /* ERROR_NO_MORE_ITEMS */ {
+        if r.0 == 259
+        /* ERROR_NO_MORE_ITEMS */
+        {
             break;
         }
         if r.0 != 0 {
@@ -319,7 +354,7 @@ pub fn enum_values(key: &Key) -> Result<Vec<ValueInfo>> {
             RegEnumValueW(
                 key.0,
                 idx,
-                windows::core::PWSTR(name.as_mut_ptr()),
+                Some(windows::core::PWSTR(name.as_mut_ptr())),
                 &mut name_len,
                 None,
                 Some(&mut kind),
@@ -339,7 +374,7 @@ pub fn enum_values(key: &Key) -> Result<Vec<ValueInfo>> {
             RegEnumValueW(
                 key.0,
                 idx,
-                windows::core::PWSTR(name.as_mut_ptr()),
+                Some(windows::core::PWSTR(name.as_mut_ptr())),
                 &mut name_len2,
                 None,
                 Some(&mut kind),
@@ -376,20 +411,32 @@ fn value_kind_name(kind: u32) -> &'static str {
 
 fn decode_value(kind: u32, data: &[u8]) -> ValueData {
     if kind == REG_SZ.0 || kind == REG_EXPAND_SZ.0 {
-        let words: Vec<u16> = data.chunks_exact(2).map(|c| u16::from_le_bytes([c[0], c[1]])).collect();
+        let words: Vec<u16> = data
+            .chunks_exact(2)
+            .map(|c| u16::from_le_bytes([c[0], c[1]]))
+            .collect();
         let s = wide_to_string(&words);
-        return if kind == REG_SZ.0 { ValueData::Sz(s) } else { ValueData::ExpandSz(s) };
+        return if kind == REG_SZ.0 {
+            ValueData::Sz(s)
+        } else {
+            ValueData::ExpandSz(s)
+        };
     }
     if kind == REG_DWORD.0 && data.len() >= 4 {
         let v = u32::from_le_bytes([data[0], data[1], data[2], data[3]]);
         return ValueData::Dword(v);
     }
     if kind == REG_QWORD.0 && data.len() >= 8 {
-        let v = u64::from_le_bytes([data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]]);
+        let v = u64::from_le_bytes([
+            data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7],
+        ]);
         return ValueData::Qword(v);
     }
     if kind == REG_MULTI_SZ.0 {
-        let words: Vec<u16> = data.chunks_exact(2).map(|c| u16::from_le_bytes([c[0], c[1]])).collect();
+        let words: Vec<u16> = data
+            .chunks_exact(2)
+            .map(|c| u16::from_le_bytes([c[0], c[1]]))
+            .collect();
         let mut strings = Vec::new();
         let mut cur = Vec::new();
         for w in words {
@@ -432,7 +479,9 @@ pub fn delete_tree(hive: Hive, sub: &str) -> Result<()> {
 
 /// Recursively export a key (and all its values + sub-keys) in standard `.reg` format.
 pub fn export_reg(key: &Key, writer: &mut impl std::io::Write) -> Result<()> {
-    writer.write_all(b"Windows Registry Editor Version 5.00\r\n\r\n").map_err(io_err)?;
+    writer
+        .write_all(b"Windows Registry Editor Version 5.00\r\n\r\n")
+        .map_err(io_err)?;
     write_reg_recursive(key, writer, &[])?;
     Ok(())
 }
@@ -457,7 +506,7 @@ fn write_reg_recursive(key: &Key, w: &mut impl std::io::Write, path: &[String]) 
             RegOpenKeyExW(
                 key.0,
                 windows::core::PCWSTR(sub_w.as_ptr()),
-                0,
+                Some(0),
                 KEY_ENUMERATE_SUB_KEYS | KEY_QUERY_VALUE,
                 &mut child,
             )
@@ -474,14 +523,24 @@ fn write_reg_recursive(key: &Key, w: &mut impl std::io::Write, path: &[String]) 
 }
 
 fn write_reg_value(w: &mut impl std::io::Write, v: &ValueInfo) -> Result<()> {
-    let name_quoted = if v.name.is_empty() { "@".to_string() } else { format!("\"{}\"", escape_reg(&v.name)) };
+    let name_quoted = if v.name.is_empty() {
+        "@".to_string()
+    } else {
+        format!("\"{}\"", escape_reg(&v.name))
+    };
     let line = match &v.data {
         ValueData::Sz(s) => format!("{}={}:\"{}\"", name_quoted, "reg_sz", escape_reg(s)),
-        ValueData::ExpandSz(s) => format!("{}={}:\"{}\"", name_quoted, "reg_expand_sz", escape_reg(s)),
+        ValueData::ExpandSz(s) => {
+            format!("{}={}:\"{}\"", name_quoted, "reg_expand_sz", escape_reg(s))
+        }
         ValueData::Dword(d) => format!("{}=dword:{:08x}", name_quoted, d),
         ValueData::Qword(d) => format!("{}=qword:{:016x}", name_quoted, d),
         ValueData::MultiSz(vs) => {
-            let inner = vs.iter().map(|s| format!("\"{}\"", escape_reg(s))).collect::<Vec<_>>().join(",");
+            let inner = vs
+                .iter()
+                .map(|s| format!("\"{}\"", escape_reg(s)))
+                .collect::<Vec<_>>()
+                .join(",");
             format!("{}={}:{}", name_quoted, "reg_multi_sz", inner)
         }
         ValueData::Binary(b) => {
@@ -501,8 +560,9 @@ fn escape_reg(s: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::ffi::OsStr;
-    use windows::Win32::System::Registry::{RegCreateKeyExW, HKEY_CURRENT_USER, REG_OPTION_NON_VOLATILE, REG_SAM_FLAGS};
+    use windows::Win32::System::Registry::{
+        RegCreateKeyExW, HKEY_CURRENT_USER, REG_OPTION_NON_VOLATILE,
+    };
 
     fn make_test_key(name: &str) -> String {
         let sub = format!("Software\\WindowsToolsTest_{}_{}", std::process::id(), name);
@@ -512,7 +572,7 @@ mod tests {
             RegCreateKeyExW(
                 HKEY_CURRENT_USER,
                 windows::core::PCWSTR(sub_w.as_ptr()),
-                0,
+                Some(0),
                 windows::core::PCWSTR::null(),
                 REG_OPTION_NON_VOLATILE,
                 KEY_READ | KEY_WRITE,

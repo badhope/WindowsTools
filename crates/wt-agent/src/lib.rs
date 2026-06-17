@@ -54,14 +54,18 @@ impl ServiceClient {
         ensure_service_started()?;
         ipc_pipe::connect_client(PIPE_NAME)
     }
-    fn close(&self, h: ipc_pipe::PipeHandle) { ipc_pipe::close(h); }
+    fn close(&self, h: ipc_pipe::PipeHandle) {
+        ipc_pipe::close(h);
+    }
 }
 
 /// Make sure the SYSTEM service is running. Tries `sc start` after a
 /// `sc query` to avoid the noisy "already running" error. Also accepts
 /// `START_PENDING` (in the middle of starting) as "running".
 fn ensure_service_started() -> Result<()> {
-    if service_state_accepts_pipe()? { return Ok(()); }
+    if service_state_accepts_pipe()? {
+        return Ok(());
+    }
     let status = std::process::Command::new("sc.exe")
         .args(["start", SERVICE_NAME])
         .output()
@@ -72,7 +76,9 @@ fn ensure_service_started() -> Result<()> {
     }
     // Wait for it to bind the pipe.
     for _ in 0..50 {
-        if let Ok(_) = ipc_pipe::connect_client(PIPE_NAME) { return Ok(()); }
+        if ipc_pipe::connect_client(PIPE_NAME).is_ok() {
+            return Ok(());
+        }
         std::thread::sleep(Duration::from_millis(100));
     }
     Err(Error::Other("service did not bind the pipe in time".into()))
@@ -85,8 +91,11 @@ fn service_state_accepts_pipe() -> Result<bool> {
         .output()
         .map_err(|e| Error::Other(format!("sc query: {e}")))?;
     let s = String::from_utf8_lossy(&out.stdout);
-    if !out.status.success() { return Ok(false); }
-    Ok(s.lines().any(|l| l.contains("RUNNING") || l.contains("START_PENDING")))
+    if !out.status.success() {
+        return Ok(false);
+    }
+    Ok(s.lines()
+        .any(|l| l.contains("RUNNING") || l.contains("START_PENDING")))
 }
 
 /// Disconnect from the service pipe.
@@ -114,11 +123,18 @@ pub fn call_service(
     loop {
         let env = match ipc_pipe::recv(h) {
             Ok(e) => e,
-            Err(e) => { service().close(h); return Err(e); }
+            Err(e) => {
+                service().close(h);
+                return Err(e);
+            }
         };
         match env {
             Envelope::Event(e) => {
-                if e.id == req.id { if let Some(cb) = on_event.as_mut() { cb(&e); } }
+                if e.id == req.id {
+                    if let Some(cb) = on_event.as_mut() {
+                        cb(&e);
+                    }
+                }
             }
             Envelope::Response(Response::Ok { id, result }) if id == req.id => {
                 return Ok(result);
@@ -137,7 +153,7 @@ fn build_request(op: &str, params: BTreeMap<String, serde_json::Value>) -> Resul
     let caller_pid = std::process::id();
     let caller_sid = wt_win32::privilege::user_sid().unwrap_or_default();
     let mut nonce = [0u8; 16];
-    rand::thread_rng().fill_bytes(&mut nonce);
+    rand::rng().fill_bytes(&mut nonce);
     // MAC is computed but the service-side validator is opt-in (skip by default).
     let mac = {
         use sha2::Digest;
@@ -147,12 +163,24 @@ fn build_request(op: &str, params: BTreeMap<String, serde_json::Value>) -> Resul
             h.update([0x1F]);
             h.update(k.as_bytes());
             h.update([0x1E]);
-            h.update(serde_json::to_vec(v).map_err(wt_core::Error::from)?.as_slice());
+            h.update(
+                serde_json::to_vec(v)
+                    .map_err(wt_core::Error::from)?
+                    .as_slice(),
+            );
         }
-        h.update(&nonce);
+        h.update(nonce);
         h.finalize().to_vec()
     };
-    Ok(Request { id: RequestId::new(), op: op.into(), params, caller_pid, caller_sid, mac, nonce })
+    Ok(Request {
+        id: RequestId::new(),
+        op: op.into(),
+        params,
+        caller_pid,
+        caller_sid,
+        mac,
+        nonce,
+    })
 }
 
 // =================================================================
@@ -180,7 +208,10 @@ pub fn registry_set(path: &RegistryPath, name: &str, kind: &str, bytes: &[u8]) -
     p.insert("path".into(), serde_json::to_value(path)?);
     p.insert("name".into(), serde_json::Value::String(name.into()));
     p.insert("kind".into(), serde_json::Value::String(kind.into()));
-    p.insert("data_b64".into(), serde_json::Value::String(b64_encode(bytes)));
+    p.insert(
+        "data_b64".into(),
+        serde_json::Value::String(b64_encode(bytes)),
+    );
     call_service("registry.set_value", p, None::<fn(&Event)>)?;
     Ok(())
 }
@@ -195,7 +226,10 @@ pub fn service_list() -> Result<serde_json::Value> {
 
 pub fn service_config(name: &str) -> Result<serde_json::Value> {
     let mut p = BTreeMap::new();
-    p.insert("name".to_string(), serde_json::Value::String(name.to_string()));
+    p.insert(
+        "name".to_string(),
+        serde_json::Value::String(name.to_string()),
+    );
     call_service("service.config", p, None::<fn(&Event)>)
 }
 
@@ -239,17 +273,29 @@ pub fn whoami() -> Result<serde_json::Value> {
 
 fn b64_encode(bytes: &[u8]) -> String {
     const CHARS: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-    let mut out = String::with_capacity((bytes.len() + 2) / 3 * 4);
+    let mut out = String::with_capacity(bytes.len().div_ceil(3) * 4);
     let mut i = 0;
     while i < bytes.len() {
         let b0 = bytes[i];
         let b1 = if i + 1 < bytes.len() { bytes[i + 1] } else { 0 };
         let b2 = if i + 2 < bytes.len() { bytes[i + 2] } else { 0 };
-        let n = if bytes.len() - i < 3 { bytes.len() - i } else { 3 };
+        let n = if bytes.len() - i < 3 {
+            bytes.len() - i
+        } else {
+            3
+        };
         out.push(CHARS[(b0 >> 2) as usize] as char);
         out.push(CHARS[(((b0 & 0x03) << 4) | (b1 >> 4)) as usize] as char);
-        if n > 1 { out.push(CHARS[(((b1 & 0x0F) << 2) | (b2 >> 6)) as usize] as char); } else { out.push('='); }
-        if n > 2 { out.push(CHARS[(b2 & 0x3F) as usize] as char); } else { out.push('='); }
+        if n > 1 {
+            out.push(CHARS[(((b1 & 0x0F) << 2) | (b2 >> 6)) as usize] as char);
+        } else {
+            out.push('=');
+        }
+        if n > 2 {
+            out.push(CHARS[(b2 & 0x3F) as usize] as char);
+        } else {
+            out.push('=');
+        }
         i += 3;
     }
     out
@@ -286,7 +332,9 @@ pub fn run_stdio_loop() -> Result<()> {
     let mut out = stdout.lock();
     for line in stdin.lock().lines() {
         let line = line.map_err(|e| Error::Io(e.to_string()))?;
-        if line.trim().is_empty() { continue; }
+        if line.trim().is_empty() {
+            continue;
+        }
         let req: StdioRequest = match serde_json::from_str(&line) {
             Ok(r) => r,
             Err(e) => {
@@ -299,11 +347,21 @@ pub fn run_stdio_loop() -> Result<()> {
         let r = dispatch_stdio(&req);
         match r {
             Ok(v) => {
-                let resp = StdioResponse { id: &req.id, ok: true, result: Some(&v), error: None };
+                let resp = StdioResponse {
+                    id: &req.id,
+                    ok: true,
+                    result: Some(&v),
+                    error: None,
+                };
                 writeln!(out, "{}", serde_json::to_string(&resp).unwrap()).ok();
             }
             Err(e) => {
-                let resp = StdioResponse { id: &req.id, ok: false, result: None, error: Some(&e) };
+                let resp = StdioResponse {
+                    id: &req.id,
+                    ok: false,
+                    result: None,
+                    error: Some(&e),
+                };
                 writeln!(out, "{}", serde_json::to_string(&resp).unwrap()).ok();
             }
         }
@@ -314,7 +372,11 @@ pub fn run_stdio_loop() -> Result<()> {
 
 fn dispatch_stdio(req: &StdioRequest) -> Result<serde_json::Value> {
     let path_param = || -> Result<RegistryPath> {
-        let v = req.params.get("path").cloned().unwrap_or(serde_json::Value::Null);
+        let v = req
+            .params
+            .get("path")
+            .cloned()
+            .unwrap_or(serde_json::Value::Null);
         if let Some(s) = v.as_str() {
             RegistryPath::parse(s).map_err(|e| Error::InvalidInput(e.to_string()))
         } else {
@@ -326,36 +388,44 @@ fn dispatch_stdio(req: &StdioRequest) -> Result<serde_json::Value> {
         "whoami" => whoami(),
         "registry.get" => {
             let path = path_param()?;
-            let name: String = serde_json::from_value(req.params.get("name").cloned().unwrap_or_default())?;
+            let name: String =
+                serde_json::from_value(req.params.get("name").cloned().unwrap_or_default())?;
             registry_get(&path, &name)
         }
         "registry.set" => {
             let path = path_param()?;
-            let name: String = serde_json::from_value(req.params.get("name").cloned().unwrap_or_default())?;
-            let kind: String = serde_json::from_value(req.params.get("kind").cloned().unwrap_or_default())?;
-            let data_b64: String = serde_json::from_value(req.params.get("data_b64").cloned().unwrap_or_default())?;
-            let bytes = b64_decode(&data_b64).map_err(|e| Error::InvalidInput(e))?;
+            let name: String =
+                serde_json::from_value(req.params.get("name").cloned().unwrap_or_default())?;
+            let kind: String =
+                serde_json::from_value(req.params.get("kind").cloned().unwrap_or_default())?;
+            let data_b64: String =
+                serde_json::from_value(req.params.get("data_b64").cloned().unwrap_or_default())?;
+            let bytes = b64_decode(&data_b64).map_err(Error::InvalidInput)?;
             registry_set(&path, &name, &kind, &bytes)?;
             Ok(serde_json::json!({ "ok": true }))
         }
         "service.list" => service_list(),
         "service.start" => {
-            let name: String = serde_json::from_value(req.params.get("name").cloned().unwrap_or_default())?;
+            let name: String =
+                serde_json::from_value(req.params.get("name").cloned().unwrap_or_default())?;
             service_start(&name)?;
             Ok(serde_json::json!({ "ok": true }))
         }
         "service.stop" => {
-            let name: String = serde_json::from_value(req.params.get("name").cloned().unwrap_or_default())?;
+            let name: String =
+                serde_json::from_value(req.params.get("name").cloned().unwrap_or_default())?;
             service_stop(&name)?;
             Ok(serde_json::json!({ "ok": true }))
         }
         "service.config" => {
-            let name: String = serde_json::from_value(req.params.get("name").cloned().unwrap_or_default())?;
+            let name: String =
+                serde_json::from_value(req.params.get("name").cloned().unwrap_or_default())?;
             service_config(&name)
         }
         "hosts.list" => hosts_list(),
         "hosts.write" => {
-            let entries: Vec<wt_win32::hosts::HostsEntry> = serde_json::from_value(req.params.get("entries").cloned().unwrap_or_default())?;
+            let entries: Vec<wt_win32::hosts::HostsEntry> =
+                serde_json::from_value(req.params.get("entries").cloned().unwrap_or_default())?;
             hosts_write(entries)?;
             Ok(serde_json::json!({ "ok": true }))
         }
@@ -368,7 +438,9 @@ fn dispatch_stdio(req: &StdioRequest) -> Result<serde_json::Value> {
 fn b64_decode(s: &str) -> std::result::Result<Vec<u8>, String> {
     let s = s.trim();
     let chars: Vec<u8> = s.bytes().filter(|b| !b.is_ascii_whitespace()).collect();
-    if chars.len() % 4 != 0 { return Err("bad length".into()); }
+    if chars.len() % 4 != 0 {
+        return Err("bad length".into());
+    }
     let mut out = Vec::with_capacity(chars.len() / 4 * 3);
     for chunk in chars.chunks(4) {
         let mut vals = [0u8; 4];
@@ -386,15 +458,23 @@ fn b64_decode(s: &str) -> std::result::Result<Vec<u8>, String> {
         // Count trailing padding chars so the unused bits decode as 0.
         let mut n_pad = 0;
         for i in (0..4).rev() {
-            if vals[i] == 64 { n_pad += 1; } else { break; }
+            if vals[i] == 64 {
+                n_pad += 1;
+            } else {
+                break;
+            }
         }
         // Pad-only positions contribute zero bits to the combined value.
         let v2 = if vals[2] == 64 { 0 } else { vals[2] as u32 };
         let v3 = if vals[3] == 64 { 0 } else { vals[3] as u32 };
         let combined = ((vals[0] as u32) << 18) | ((vals[1] as u32) << 12) | (v2 << 6) | v3;
         out.push((combined >> 16) as u8);
-        if n_pad < 2 { out.push((combined >> 8) as u8); }
-        if n_pad < 1 { out.push(combined as u8); }
+        if n_pad < 2 {
+            out.push((combined >> 8) as u8);
+        }
+        if n_pad < 1 {
+            out.push(combined as u8);
+        }
     }
     Ok(out)
 }
@@ -404,7 +484,16 @@ mod tests {
     use super::*;
     #[test]
     fn base64_roundtrip() {
-        for s in &[b"" as &[u8], b"f", b"fo", b"foo", b"foob", b"fooba", b"foobar", b"hello world"] {
+        for s in &[
+            b"" as &[u8],
+            b"f",
+            b"fo",
+            b"foo",
+            b"foob",
+            b"fooba",
+            b"foobar",
+            b"hello world",
+        ] {
             assert_eq!(b64_decode(&b64_encode(s)).unwrap(), *s);
         }
     }

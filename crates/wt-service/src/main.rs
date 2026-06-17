@@ -65,23 +65,34 @@ fn main() {
 
 fn run_sc(args: &[&str]) -> Result<(), String> {
     let exe = locate_sc().ok_or_else(|| "sc.exe not found".to_string())?;
-    let out = Command::new(exe).args(args).output().map_err(|e| e.to_string())?;
+    let out = Command::new(exe)
+        .args(args)
+        .output()
+        .map_err(|e| e.to_string())?;
     io::stdout().write_all(&out.stdout).ok();
     io::stderr().write_all(&out.stderr).ok();
-    if !out.status.success() { return Err(format!("sc exited {:?}", out.status.code())); }
+    if !out.status.success() {
+        return Err(format!("sc exited {:?}", out.status.code()));
+    }
     Ok(())
 }
 
 fn locate_sc() -> Option<PathBuf> {
     let sys = std::env::var("SystemRoot").ok()?;
     let p = PathBuf::from(sys).join("System32").join("sc.exe");
-    if p.exists() { Some(p) } else { None }
+    if p.exists() {
+        Some(p)
+    } else {
+        None
+    }
 }
 
 fn init_tracing() {
     use tracing_subscriber::EnvFilter;
     let _ = tracing_subscriber::fmt()
-        .with_env_filter(EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info")))
+        .with_env_filter(
+            EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info")),
+        )
         .with_target(false)
         .try_init();
 }

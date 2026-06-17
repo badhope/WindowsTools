@@ -1,7 +1,7 @@
 //! Application-wide state managed by Tauri.
 
-use std::sync::Arc;
 use parking_lot::Mutex;
+use std::sync::Arc;
 
 /// State held by Tauri and exposed to every `#[tauri::command]`.
 pub struct AppState {
@@ -14,6 +14,9 @@ pub struct AppState {
 impl AppState {
     /// Create a new AppState wrapping the given manifest.
     pub fn new(manifest: Arc<crate::manifest::Manifest>) -> Self {
-        Self { manifest, sampler: Mutex::new(None) }
+        Self {
+            manifest,
+            sampler: Mutex::new(None),
+        }
     }
 }

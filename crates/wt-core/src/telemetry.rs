@@ -47,7 +47,12 @@ struct MovingWindow {
 
 impl MovingWindow {
     fn new(cap: usize) -> Self {
-        Self { buf: vec![Duration::ZERO; cap], cap, idx: 0, full: false }
+        Self {
+            buf: vec![Duration::ZERO; cap],
+            cap,
+            idx: 0,
+            full: false,
+        }
     }
     fn push(&mut self, d: Duration) {
         self.buf[self.idx] = d;
@@ -75,7 +80,9 @@ impl MovingWindow {
 impl Timer {
     /// Create a new timer with the given capacity for the moving window.
     pub fn new(cap: usize) -> Self {
-        Self { samples: RwLock::new(MovingWindow::new(cap.max(1))) }
+        Self {
+            samples: RwLock::new(MovingWindow::new(cap.max(1))),
+        }
     }
     /// Time the closure and record the elapsed duration.
     pub fn time<F, T>(&self, f: F) -> T
@@ -139,7 +146,15 @@ impl Registry {
             .timers
             .read()
             .iter()
-            .map(|(k, v)| (k.clone(), TimerSnapshot { avg_us: v.avg().as_micros() as u64, p95_us: v.p95().as_micros() as u64 }))
+            .map(|(k, v)| {
+                (
+                    k.clone(),
+                    TimerSnapshot {
+                        avg_us: v.avg().as_micros() as u64,
+                        p95_us: v.p95().as_micros() as u64,
+                    },
+                )
+            })
             .collect();
         TelemetrySnapshot { counters, timers }
     }

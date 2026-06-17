@@ -27,10 +27,12 @@ const PIPE_REJECT_REMOTE_CLIENTS: u32 = 0x00000008;
 const PIPE_UNLIMITED_INSTANCES: u32 = 255;
 const FILE_GENERIC_READ: u32 = 0x00120089;
 const FILE_GENERIC_WRITE: u32 = 0x00120116;
+#[allow(dead_code)]
 const FILE_SHARE_READ: u32 = 0x00000001;
+#[allow(dead_code)]
 const FILE_SHARE_WRITE: u32 = 0x00000002;
 const OPEN_EXISTING: u32 = 3;
-const INVALID_HANDLE_VALUE: *mut c_void = -1 as isize as *mut c_void;
+const INVALID_HANDLE_VALUE: *mut c_void = -1_isize as *mut c_void;
 
 #[link(name = "kernel32")]
 extern "system" {
@@ -79,7 +81,11 @@ fn wide_null(s: &str) -> Vec<u16> {
 }
 
 fn check(r: i32, op: &str) -> Result<()> {
-    if r == 0 { Err(wt_core::Error::win32(unsafe { GetLastError() } as i32, op)) } else { Ok(()) }
+    if r == 0 {
+        Err(wt_core::Error::win32(unsafe { GetLastError() } as i32, op))
+    } else {
+        Ok(())
+    }
 }
 
 /// Create a server end of a named pipe. `instance` lets you create multiple
@@ -108,7 +114,10 @@ pub fn create_server_by_name(name: &str) -> Result<PipeHandle> {
             sa.as_ref() as *const Sa as *mut c_void,
         );
         if h.is_null() || h == INVALID_HANDLE_VALUE {
-            return Err(wt_core::Error::win32(GetLastError() as i32, "CreateNamedPipeW"));
+            return Err(wt_core::Error::win32(
+                GetLastError() as i32,
+                "CreateNamedPipeW",
+            ));
         }
         // Leak the security descriptor; the process lives as long as the pipe.
         std::mem::forget(sa);
@@ -143,16 +152,28 @@ fn build_security_attributes() -> Box<Sa> {
     let mut sd_size: u32 = 0;
     let r = unsafe {
         ConvertStringSecurityDescriptorToSecurityDescriptorW(
-            sd_string.as_ptr(), 1, &mut sd, &mut sd_size,
+            sd_string.as_ptr(),
+            1,
+            &mut sd,
+            &mut sd_size,
         )
     };
     if r == 0 || sd.is_null() {
-        return Box::new(Sa { n_length: std::mem::size_of::<Sa>() as u32, lp_security_descriptor: std::ptr::null_mut(), b_inherit_handle: 0 });
+        return Box::new(Sa {
+            n_length: std::mem::size_of::<Sa>() as u32,
+            lp_security_descriptor: std::ptr::null_mut(),
+            b_inherit_handle: 0,
+        });
     }
-    Box::new(Sa { n_length: std::mem::size_of::<Sa>() as u32, lp_security_descriptor: sd, b_inherit_handle: 0 })
+    Box::new(Sa {
+        n_length: std::mem::size_of::<Sa>() as u32,
+        lp_security_descriptor: sd,
+        b_inherit_handle: 0,
+    })
 }
 
 /// Block until a client connects to the server end.
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub fn accept(server: PipeHandle) -> Result<()> {
     unsafe {
         // ConnectNamedPipe returns 0 on success in blocking mode (== ERROR_PIPE_CONNECTED if already).
@@ -168,6 +189,7 @@ pub fn accept(server: PipeHandle) -> Result<()> {
 }
 
 /// Disconnect (kick) the current client.
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub fn disconnect(server: PipeHandle) -> Result<()> {
     unsafe { check(DisconnectNamedPipe(server), "DisconnectNamedPipe") }
 }
@@ -187,13 +209,17 @@ pub fn connect_client(name: &str) -> Result<PipeHandle> {
             std::ptr::null_mut(),
         );
         if h.is_null() || h == INVALID_HANDLE_VALUE {
-            return Err(wt_core::Error::win32(GetLastError() as i32, format!("CreateFileW {name}")));
+            return Err(wt_core::Error::win32(
+                GetLastError() as i32,
+                format!("CreateFileW {name}"),
+            ));
         }
         Ok(h)
     }
 }
 
 /// Send a single envelope (length-prefixed JSON frame) over the pipe.
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub fn send(h: PipeHandle, env: &Envelope) -> Result<()> {
     let bytes = serde_json::to_vec(env).map_err(wt_core::Error::from)?;
     let len = (bytes.len() as u32).to_le_bytes();
@@ -202,40 +228,64 @@ pub fn send(h: PipeHandle, env: &Envelope) -> Result<()> {
         let r = WriteFile(h, len.as_ptr(), 4, &mut written, std::ptr::null_mut());
         check(r, "WriteFile length")?;
         if written != 4 {
-            return Err(wt_core::Error::Ipc(format!("WriteFile short length: {written}")));
+            return Err(wt_core::Error::Ipc(format!(
+                "WriteFile short length: {written}"
+            )));
         }
         written = 0;
-        let r = WriteFile(h, bytes.as_ptr(), bytes.len() as u32, &mut written, std::ptr::null_mut());
+        let r = WriteFile(
+            h,
+            bytes.as_ptr(),
+            bytes.len() as u32,
+            &mut written,
+            std::ptr::null_mut(),
+        );
         check(r, "WriteFile payload")?;
         if written as usize != bytes.len() {
-            return Err(wt_core::Error::Ipc(format!("WriteFile short payload: {written}")));
+            return Err(wt_core::Error::Ipc(format!(
+                "WriteFile short payload: {written}"
+            )));
         }
     }
     Ok(())
 }
 
 /// Receive a single envelope (length-prefixed JSON frame) from the pipe.
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub fn recv(h: PipeHandle) -> Result<Envelope> {
     let mut len_buf = [0u8; 4];
     let mut read: u32 = 0;
     unsafe {
         let r = ReadFile(h, len_buf.as_mut_ptr(), 4, &mut read, std::ptr::null_mut());
         check(r, "ReadFile length")?;
-        if read == 0 { return Err(wt_core::Error::Ipc("pipe closed".into())); }
+        if read == 0 {
+            return Err(wt_core::Error::Ipc("pipe closed".into()));
+        }
         if read != 4 {
-            return Err(wt_core::Error::Ipc(format!("ReadFile short length: {read}")));
+            return Err(wt_core::Error::Ipc(format!(
+                "ReadFile short length: {read}"
+            )));
         }
         let len = u32::from_le_bytes(len_buf) as usize;
         let mut buf = vec![0u8; len];
-        let r = ReadFile(h, buf.as_mut_ptr(), len as u32, &mut read, std::ptr::null_mut());
+        let r = ReadFile(
+            h,
+            buf.as_mut_ptr(),
+            len as u32,
+            &mut read,
+            std::ptr::null_mut(),
+        );
         check(r, "ReadFile payload")?;
         if read as usize != len {
-            return Err(wt_core::Error::Ipc(format!("ReadFile short payload: {read} of {len}")));
+            return Err(wt_core::Error::Ipc(format!(
+                "ReadFile short payload: {read} of {len}"
+            )));
         }
-        Ok(serde_json::from_slice(&buf).map_err(wt_core::Error::from)?)
+        serde_json::from_slice(&buf).map_err(wt_core::Error::from)
     }
 }
 
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub fn close(h: PipeHandle) {
     if !h.is_null() && h != INVALID_HANDLE_VALUE {
         unsafe { CloseHandle(h) };

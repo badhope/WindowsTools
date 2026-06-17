@@ -12,6 +12,9 @@ pub fn task_list() -> wt_core::Result<serde_json::Value> {
 
 #[tauri::command]
 pub fn task_run_now(args: TaskRunArgs) -> wt_core::Result<()> {
-    rpc::call("task.run_now", params([("name", serde_json::json!(args.name))]))?;
+    rpc::call(
+        "task.run_now",
+        params([("name", serde_json::json!(args.name))]),
+    )?;
     Ok(())
 }

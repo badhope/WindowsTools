@@ -55,10 +55,10 @@ impl Hive {
     /// HKEY_CURRENT_CONFIG  = 0x80000005
     pub fn hkey(self) -> isize {
         match self {
-            Hive::ClassesRoot   => 0x80000000isize,
-            Hive::CurrentUser   => 0x80000001isize,
-            Hive::LocalMachine  => 0x80000002isize,
-            Hive::Users         => 0x80000003isize,
+            Hive::ClassesRoot => 0x80000000isize,
+            Hive::CurrentUser => 0x80000001isize,
+            Hive::LocalMachine => 0x80000002isize,
+            Hive::Users => 0x80000003isize,
             Hive::CurrentConfig => 0x80000005isize,
         }
     }
@@ -84,10 +84,7 @@ impl RegistryPath {
         if trimmed.is_empty() {
             return Err(Error::InvalidInput("empty registry path".into()));
         }
-        let (hive_str, rest) = trimmed
-            .split_once(['\\', '/'])
-            .map(|(h, r)| (h, r))
-            .unwrap_or((trimmed, ""));
+        let (hive_str, rest) = trimmed.split_once(['\\', '/']).unwrap_or((trimmed, ""));
         let hive = match hive_str.to_ascii_uppercase().as_str() {
             "HKCR" | "HKEY_CLASSES_ROOT" => Hive::ClassesRoot,
             "HKCU" | "HKEY_CURRENT_USER" => Hive::CurrentUser,
@@ -97,7 +94,10 @@ impl RegistryPath {
             other => return Err(Error::InvalidInput(format!("unknown hive: {other}"))),
         };
         if rest.is_empty() {
-            return Ok(Self { hive, sub: String::new() });
+            return Ok(Self {
+                hive,
+                sub: String::new(),
+            });
         }
         let sub = rest.replace('/', "\\");
         for seg in sub.split('\\') {
@@ -113,7 +113,10 @@ impl RegistryPath {
 
     /// Construct from a hive + sub-key. The sub-key may not be empty.
     pub fn new(hive: Hive, sub: impl Into<String>) -> Self {
-        Self { hive, sub: sub.into() }
+        Self {
+            hive,
+            sub: sub.into(),
+        }
     }
 
     /// Borrow the hive.

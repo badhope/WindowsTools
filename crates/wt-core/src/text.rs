@@ -10,9 +10,17 @@ use widestring::{U16CString, U16Str, U16String};
 /// Invalid sequences are replaced with U+FFFD rather than failing.
 pub fn decode_wide(bytes: &[u8]) -> String {
     // Strip a leading UTF-16LE BOM (FF FE) if present.
-    let stripped: &[u8] = if bytes.starts_with(&[0xFF, 0xFE]) { &bytes[2..] } else { bytes };
+    let stripped: &[u8] = if bytes.starts_with(&[0xFF, 0xFE]) {
+        &bytes[2..]
+    } else {
+        bytes
+    };
     // Make sure the length is a multiple of 2.
-    let aligned = if stripped.len() % 2 == 0 { Cow::Borrowed(stripped) } else { Cow::Owned(stripped[..stripped.len() - 1].to_vec()) };
+    let aligned = if stripped.len() % 2 == 0 {
+        Cow::Borrowed(stripped)
+    } else {
+        Cow::Owned(stripped[..stripped.len() - 1].to_vec())
+    };
     let (cow, _enc, had_errors) = UTF_16LE.decode(&aligned);
     if had_errors {
         // Already replaced with U+FFFD, so this is fine.

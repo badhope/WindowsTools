@@ -1,18 +1,18 @@
 //! Process enumeration and control via Toolhelp + PSAPI.
 
+use crate::util::HandleGuard;
 use serde::{Deserialize, Serialize};
 use windows::Win32::System::Diagnostics::ToolHelp::{
     CreateToolhelp32Snapshot, Process32FirstW, Process32NextW, PROCESSENTRY32W, TH32CS_SNAPPROCESS,
 };
+use windows::Win32::System::ProcessStatus::{GetProcessMemoryInfo, PROCESS_MEMORY_COUNTERS};
 use windows::Win32::System::Threading::{
     OpenProcess, SetPriorityClass, TerminateProcess, ABOVE_NORMAL_PRIORITY_CLASS,
-    BELOW_NORMAL_PRIORITY_CLASS, HIGH_PRIORITY_CLASS, IDLE_PRIORITY_CLASS,
-    NORMAL_PRIORITY_CLASS, PROCESS_QUERY_LIMITED_INFORMATION, PROCESS_SET_INFORMATION,
-    PROCESS_TERMINATE, REALTIME_PRIORITY_CLASS,
+    BELOW_NORMAL_PRIORITY_CLASS, HIGH_PRIORITY_CLASS, IDLE_PRIORITY_CLASS, NORMAL_PRIORITY_CLASS,
+    PROCESS_QUERY_LIMITED_INFORMATION, PROCESS_SET_INFORMATION, PROCESS_TERMINATE,
+    REALTIME_PRIORITY_CLASS,
 };
-use windows::Win32::System::ProcessStatus::{GetProcessMemoryInfo, PROCESS_MEMORY_COUNTERS};
 use wt_core::{Error, Result};
-use crate::util::HandleGuard;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProcessRow {
