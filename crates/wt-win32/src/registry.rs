@@ -289,7 +289,7 @@ pub fn write_value(key: &Key, name: &str, data: &ValueData) -> Result<()> {
         RegSetValueExW(
             key.0,
             windows::core::PCWSTR(name_w.as_ptr()),
-            0,
+            Some(0),
             kind,
             Some(&bytes),
         )

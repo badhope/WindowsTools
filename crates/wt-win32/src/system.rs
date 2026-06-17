@@ -32,7 +32,7 @@ pub fn computer_name() -> Result<String> {
     let _ = unsafe {
         GetComputerNameExW(
             ComputerNamePhysicalDnsHostname,
-            windows::core::PWSTR(std::ptr::null_mut()),
+            Some(windows::core::PWSTR(std::ptr::null_mut())),
             &mut size,
         )
     };
@@ -40,7 +40,7 @@ pub fn computer_name() -> Result<String> {
     unsafe {
         GetComputerNameExW(
             ComputerNamePhysicalDnsHostname,
-            windows::core::PWSTR(buf.as_mut_ptr()),
+            Some(windows::core::PWSTR(buf.as_mut_ptr())),
             &mut size,
         )
         .map_err(|e| Error::win32(e.code().0, "GetComputerNameExW"))?;
@@ -52,7 +52,7 @@ pub fn computer_name() -> Result<String> {
 pub fn user_name() -> Result<String> {
     let mut size: u32 = 256;
     let mut buf = vec![0u16; 256];
-    let ok = unsafe { GetUserNameW(windows::core::PWSTR(buf.as_mut_ptr()), &mut size) };
+    let ok = unsafe { GetUserNameW(Some(windows::core::PWSTR(buf.as_mut_ptr())), &mut size) };
     if ok.is_err() {
         return Err(crate::util::last_error("GetUserNameW"));
     }
