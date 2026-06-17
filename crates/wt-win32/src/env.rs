@@ -4,10 +4,10 @@
 //! (`HKCU\Environment` and `HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment`)
 //! and need a `WM_SETTINGCHANGE` broadcast to apply to new processes.
 
+use crate::registry::{self, Hive, ValueData};
 use serde::{Deserialize, Serialize};
 use std::env;
 use wt_core::Result;
-use crate::registry::{self, Hive, ValueData};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EnvVar {
@@ -29,7 +29,11 @@ pub enum EnvScope {
 
 pub fn list_process() -> Vec<EnvVar> {
     env::vars()
-        .map(|(k, v)| EnvVar { name: k, value: v, scope: EnvScope::Process })
+        .map(|(k, v)| EnvVar {
+            name: k,
+            value: v,
+            scope: EnvScope::Process,
+        })
         .collect()
 }
 
@@ -38,18 +42,30 @@ pub fn list_user() -> Result<Vec<EnvVar>> {
     let mut out = Vec::new();
     for v in registry::enum_values(&k)? {
         if let ValueData::Sz(s) | ValueData::ExpandSz(s) = v.data {
-            out.push(EnvVar { name: v.name, value: s, scope: EnvScope::User });
+            out.push(EnvVar {
+                name: v.name,
+                value: s,
+                scope: EnvScope::User,
+            });
         }
     }
     Ok(out)
 }
 
 pub fn list_system() -> Result<Vec<EnvVar>> {
-    let k = registry::open_key(Hive::LocalMachine, r"SYSTEM\CurrentControlSet\Control\Session Manager\Environment", false)?;
+    let k = registry::open_key(
+        Hive::LocalMachine,
+        r"SYSTEM\CurrentControlSet\Control\Session Manager\Environment",
+        false,
+    )?;
     let mut out = Vec::new();
     for v in registry::enum_values(&k)? {
         if let ValueData::Sz(s) | ValueData::ExpandSz(s) = v.data {
-            out.push(EnvVar { name: v.name, value: s, scope: EnvScope::System });
+            out.push(EnvVar {
+                name: v.name,
+                value: s,
+                scope: EnvScope::System,
+            });
         }
     }
     Ok(out)
@@ -75,12 +91,20 @@ pub fn delete_user(name: &str) -> Result<()> {
 }
 
 pub fn set_system(name: &str, value: &str) -> Result<()> {
-    let k = registry::open_key(Hive::LocalMachine, r"SYSTEM\CurrentControlSet\Control\Session Manager\Environment", true)?;
+    let k = registry::open_key(
+        Hive::LocalMachine,
+        r"SYSTEM\CurrentControlSet\Control\Session Manager\Environment",
+        true,
+    )?;
     registry::write_value(&k, name, &ValueData::ExpandSz(value.to_string()))?;
     Ok(())
 }
 
 pub fn delete_system(name: &str) -> Result<()> {
-    let k = registry::open_key(Hive::LocalMachine, r"SYSTEM\CurrentControlSet\Control\Session Manager\Environment", true)?;
+    let k = registry::open_key(
+        Hive::LocalMachine,
+        r"SYSTEM\CurrentControlSet\Control\Session Manager\Environment",
+        true,
+    )?;
     registry::delete_value(&k, name)
 }

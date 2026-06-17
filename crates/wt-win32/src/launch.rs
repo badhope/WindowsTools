@@ -48,7 +48,11 @@ pub fn shell_execute(verb: &str, file: &str, args: Option<&str>) -> Result<u32> 
         hwnd: std::ptr::null_mut(),
         lp_verb: verb_w.as_ptr(),
         lp_file: file_w.as_ptr(),
-        lp_parameters: if args.is_some() { args_w.as_ptr() } else { std::ptr::null() },
+        lp_parameters: if args.is_some() {
+            args_w.as_ptr()
+        } else {
+            std::ptr::null()
+        },
         lp_directory: std::ptr::null(),
         n_show: 1, // SW_SHOWNORMAL
         h_inst_app: std::ptr::null_mut(),
@@ -61,15 +65,27 @@ pub fn shell_execute(verb: &str, file: &str, args: Option<&str>) -> Result<u32> 
         h_monitor: std::ptr::null_mut(),
     };
     let r = unsafe { ShellExecuteExW(&mut info) };
-    if r <= 32 { return Err(Error::Other(format!("ShellExecuteExW: code {r}"))); }
-    let pid = if info.h_process.is_null() { 0 } else {
+    if r <= 32 {
+        return Err(Error::Other(format!("ShellExecuteExW: code {r}")));
+    }
+    let pid = if info.h_process.is_null() {
+        0
+    } else {
         // The h_process is the new process handle; we need GetProcessId to get the PID.
-        extern "system" { fn GetProcessId(h: *mut c_void) -> u32; }
+        extern "system" {
+            fn GetProcessId(h: *mut c_void) -> u32;
+        }
         unsafe { GetProcessId(info.h_process) }
     };
     #[link(name = "kernel32")]
-    extern "system" { fn CloseHandle(h: *mut c_void) -> i32; }
-    if !info.h_process.is_null() { unsafe { CloseHandle(info.h_process); } }
+    extern "system" {
+        fn CloseHandle(h: *mut c_void) -> i32;
+    }
+    if !info.h_process.is_null() {
+        unsafe {
+            CloseHandle(info.h_process);
+        }
+    }
     Ok(pid)
 }
 
@@ -94,4 +110,6 @@ pub fn open_explorer(path: &str) -> Result<u32> {
 }
 
 #[allow(dead_code)]
-const fn _unused() { let _ = SE_ERR_NOERROR; }
+const fn _unused() {
+    let _ = SE_ERR_NOERROR;
+}

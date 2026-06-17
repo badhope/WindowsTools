@@ -1,10 +1,10 @@
 //! `palette.*` commands: list and search the command manifest.
 
-use tauri::State;
 use crate::manifest::ManifestItem;
 use crate::palette as pl;
 use crate::state::AppState;
 use crate::types::PaletteSearchArgs;
+use tauri::State;
 
 #[tauri::command]
 pub fn palette_list_commands(state: State<'_, AppState>) -> Vec<ManifestItem> {

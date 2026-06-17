@@ -4,10 +4,10 @@
 //! We invoke them as child processes and parse their stdout for percent
 //! progress, which we surface to the caller via a channel.
 
+use parking_lot::Mutex;
 use std::io::{BufRead, BufReader};
 use std::process::{Command, Stdio};
 use std::sync::Arc;
-use parking_lot::Mutex;
 use std::time::Duration;
 use wt_core::{Error, Result};
 
@@ -15,9 +15,15 @@ use wt_core::{Error, Result};
 #[derive(Clone, Default)]
 pub struct Cancel(Arc<Mutex<bool>>);
 impl Cancel {
-    pub fn new() -> Self { Self::default() }
-    pub fn cancel(&self) { *self.0.lock() = true; }
-    pub fn is_cancelled(&self) -> bool { *self.0.lock() }
+    pub fn new() -> Self {
+        Self::default()
+    }
+    pub fn cancel(&self) {
+        *self.0.lock() = true;
+    }
+    pub fn is_cancelled(&self) -> bool {
+        *self.0.lock()
+    }
 }
 
 /// Run `sfc /scannow` with a progress callback.
@@ -28,7 +34,10 @@ pub fn sfc<F: FnMut(f32, &str)>(cancel: Cancel, mut progress: F) -> Result<()> {
         .stderr(Stdio::piped())
         .spawn()
         .map_err(|e| Error::Other(format!("spawn sfc: {e}")))?;
-    let stdout = child.stdout.take().ok_or_else(|| Error::Other("no stdout".into()))?;
+    let stdout = child
+        .stdout
+        .take()
+        .ok_or_else(|| Error::Other("no stdout".into()))?;
     let reader = BufReader::new(stdout);
     for line in reader.lines().map_while(std::io::Result::ok) {
         if cancel.is_cancelled() {
@@ -38,7 +47,9 @@ pub fn sfc<F: FnMut(f32, &str)>(cancel: Cancel, mut progress: F) -> Result<()> {
         let pct = parse_sfc_percent(&line);
         progress(pct, &line);
     }
-    let status = child.wait().map_err(|e| Error::Other(format!("wait sfc: {e}")))?;
+    let status = child
+        .wait()
+        .map_err(|e| Error::Other(format!("wait sfc: {e}")))?;
     if !status.success() {
         return Err(Error::Other(format!("sfc exited {status:?}")));
     }
@@ -55,7 +66,10 @@ pub fn dism<F: FnMut(f32, &str)>(cancel: Cancel, mut progress: F) -> Result<()> 
         .stderr(Stdio::piped())
         .spawn()
         .map_err(|e| Error::Other(format!("spawn dism: {e}")))?;
-    let stdout = child.stdout.take().ok_or_else(|| Error::Other("no stdout".into()))?;
+    let stdout = child
+        .stdout
+        .take()
+        .ok_or_else(|| Error::Other("no stdout".into()))?;
     let reader = BufReader::new(stdout);
     for line in reader.lines().map_while(std::io::Result::ok) {
         if cancel.is_cancelled() {
@@ -65,7 +79,9 @@ pub fn dism<F: FnMut(f32, &str)>(cancel: Cancel, mut progress: F) -> Result<()> 
         let pct = parse_dism_percent(&line);
         progress(pct, &line);
     }
-    let status = child.wait().map_err(|e| Error::Other(format!("wait dism: {e}")))?;
+    let status = child
+        .wait()
+        .map_err(|e| Error::Other(format!("wait dism: {e}")))?;
     if !status.success() {
         return Err(Error::Other(format!("dism exited {status:?}")));
     }
@@ -74,7 +90,10 @@ pub fn dism<F: FnMut(f32, &str)>(cancel: Cancel, mut progress: F) -> Result<()> 
 
 fn parse_sfc_percent(line: &str) -> f32 {
     if let Some(p) = line.find('%') {
-        let start = line[..p].rfind(|c: char| !c.is_ascii_digit() && c != '.').map(|i| i + 1).unwrap_or(0);
+        let start = line[..p]
+            .rfind(|c: char| !c.is_ascii_digit() && c != '.')
+            .map(|i| i + 1)
+            .unwrap_or(0);
         if let Ok(v) = line[start..p].parse::<f32>() {
             return v;
         }

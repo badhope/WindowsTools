@@ -49,7 +49,11 @@ pub fn run(name: &str) -> Result<()> {
         .args(["/Run", "/TN", name])
         .status()
         .map_err(|e| wt_core::Error::Other(format!("schtasks /Run: {e}")))?;
-    if !s.success() { return Err(wt_core::Error::Other(format!("schtasks /Run {name} failed"))); }
+    if !s.success() {
+        return Err(wt_core::Error::Other(format!(
+            "schtasks /Run {name} failed"
+        )));
+    }
     Ok(())
 }
 
@@ -58,6 +62,10 @@ pub fn disable(name: &str) -> Result<()> {
         .args(["/Change", "/TN", name, "/DISABLE"])
         .status()
         .map_err(|e| wt_core::Error::Other(format!("schtasks /Change: {e}")))?;
-    if !s.success() { return Err(wt_core::Error::Other(format!("schtasks /Change {name} failed"))); }
+    if !s.success() {
+        return Err(wt_core::Error::Other(format!(
+            "schtasks /Change {name} failed"
+        )));
+    }
     Ok(())
 }

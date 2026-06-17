@@ -17,8 +17,10 @@ impl SharedSecret {
     /// Generate a fresh random secret.
     pub fn generate() -> Self {
         let mut bytes = [0u8; 32];
-        rand::thread_rng().fill_bytes(&mut bytes);
-        Self { bytes: Arc::new(bytes) }
+        rand::rng().fill_bytes(&mut bytes);
+        Self {
+            bytes: Arc::new(bytes),
+        }
     }
 
     /// Construct from a raw 32-byte slice. Returns `None` if length is wrong.
@@ -28,7 +30,9 @@ impl SharedSecret {
         }
         let mut bytes = [0u8; 32];
         bytes.copy_from_slice(slice);
-        Some(Self { bytes: Arc::new(bytes) })
+        Some(Self {
+            bytes: Arc::new(bytes),
+        })
     }
 
     /// Borrow the raw bytes.
@@ -57,7 +61,9 @@ impl SharedSecret {
             let h = u8::from_str_radix(&s[i * 2..i * 2 + 2], 16).ok()?;
             bytes[i] = h;
         }
-        Some(Self { bytes: Arc::new(bytes) })
+        Some(Self {
+            bytes: Arc::new(bytes),
+        })
     }
 
     /// Compute a MAC over `data` using HMAC-SHA256.

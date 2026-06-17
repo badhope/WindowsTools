@@ -15,7 +15,10 @@ pub type Result<T> = std::result::Result<T, Error>;
 pub enum Error {
     /// The user is not an administrator and the operation requires it.
     #[error("administrator privileges required: {operation}")]
-    NotAdmin { operation: String },
+    NotAdmin {
+        /// The operation that required elevation.
+        operation: String,
+    },
 
     /// The operation was cancelled (by the user or by shutdown).
     #[error("operation cancelled")]
@@ -23,15 +26,26 @@ pub enum Error {
 
     /// Caller asked for something that doesn't exist.
     #[error("not found: {resource}")]
-    NotFound { resource: String },
+    NotFound {
+        /// The resource that could not be found.
+        resource: String,
+    },
 
     /// Caller asked for something that exists but is not allowed.
     #[error("access denied to {resource}")]
-    AccessDenied { resource: String },
+    AccessDenied {
+        /// The resource that was denied.
+        resource: String,
+    },
 
     /// Permission/ownership is wrong but might be fixable.
     #[error("permission denied: {resource}: {reason}")]
-    PermissionDenied { resource: String, reason: String },
+    PermissionDenied {
+        /// The resource with wrong permission/ownership.
+        resource: String,
+        /// Why the permission is wrong (and possibly how to fix it).
+        reason: String,
+    },
 
     /// Caller input was malformed.
     #[error("invalid input: {0}")]
@@ -55,7 +69,12 @@ pub enum Error {
 
     /// Underlying Windows API failure with HRESULT.
     #[error("win32 error 0x{code:08x} in {context}")]
-    Win32 { code: i32, context: String },
+    Win32 {
+        /// The HRESULT-like error code.
+        code: i32,
+        /// Human-readable context where the error occurred.
+        context: String,
+    },
 
     /// Underlying IO error.
     #[error("io error: {0}")]
@@ -73,7 +92,10 @@ pub enum Error {
 impl Error {
     /// Construct a Win32 error from a HRESULT-like code.
     pub fn win32(code: i32, context: impl Into<String>) -> Self {
-        Self::Win32 { code, context: context.into() }
+        Self::Win32 {
+            code,
+            context: context.into(),
+        }
     }
 
     /// Construct from a `&str`.
@@ -90,7 +112,9 @@ impl Error {
 impl From<io::Error> for Error {
     fn from(e: io::Error) -> Self {
         match e.kind() {
-            io::ErrorKind::NotFound => Self::NotFound { resource: e.to_string() },
+            io::ErrorKind::NotFound => Self::NotFound {
+                resource: e.to_string(),
+            },
             io::ErrorKind::PermissionDenied => Self::PermissionDenied {
                 resource: "<io>".into(),
                 reason: e.to_string(),
