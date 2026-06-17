@@ -27,7 +27,7 @@ use std::collections::BTreeMap;
 use std::io::{self, BufRead, Write};
 use std::time::Duration;
 
-use rand::RngCore;
+use rand::Rng;
 use serde::{Deserialize, Serialize};
 use sha2::Sha256;
 
