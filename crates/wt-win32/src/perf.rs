@@ -83,7 +83,9 @@ extern "system" {
 }
 
 const PDH_FMT_DOUBLE: u32 = 0x00000200;
+#[allow(dead_code)]
 const PDH_INVALID_HANDLE: u32 = 0xC0000BBC;
+#[allow(dead_code)]
 const PDH_MORE_DATA: u32 = 0x800007D2;
 
 unsafe impl Send for PerfSampler {}
@@ -91,6 +93,7 @@ unsafe impl Sync for PerfSampler {}
 
 impl PerfSampler {
     pub fn new() -> Result<Self> {
+        #[allow(clippy::arc_with_non_send_sync)]
         let s = Self {
             inner: Arc::new(Mutex::new(None)),
         };

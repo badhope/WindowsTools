@@ -22,7 +22,7 @@ const DRIVE_LETTERS: &[char] = &[
 const FILE_SHARE_READ: u32 = 0x00000001;
 const FILE_SHARE_WRITE: u32 = 0x00000002;
 const OPEN_EXISTING: u32 = 3;
-const INVALID_HANDLE_VALUE: *mut c_void = -1 as isize as *mut c_void;
+const INVALID_HANDLE_VALUE: *mut c_void = -1_isize as *mut c_void;
 
 #[link(name = "kernel32")]
 extern "system" {

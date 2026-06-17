@@ -27,10 +27,12 @@ const PIPE_REJECT_REMOTE_CLIENTS: u32 = 0x00000008;
 const PIPE_UNLIMITED_INSTANCES: u32 = 255;
 const FILE_GENERIC_READ: u32 = 0x00120089;
 const FILE_GENERIC_WRITE: u32 = 0x00120116;
+#[allow(dead_code)]
 const FILE_SHARE_READ: u32 = 0x00000001;
+#[allow(dead_code)]
 const FILE_SHARE_WRITE: u32 = 0x00000002;
 const OPEN_EXISTING: u32 = 3;
-const INVALID_HANDLE_VALUE: *mut c_void = -1 as isize as *mut c_void;
+const INVALID_HANDLE_VALUE: *mut c_void = -1_isize as *mut c_void;
 
 #[link(name = "kernel32")]
 extern "system" {
@@ -171,6 +173,7 @@ fn build_security_attributes() -> Box<Sa> {
 }
 
 /// Block until a client connects to the server end.
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub fn accept(server: PipeHandle) -> Result<()> {
     unsafe {
         // ConnectNamedPipe returns 0 on success in blocking mode (== ERROR_PIPE_CONNECTED if already).
@@ -186,6 +189,7 @@ pub fn accept(server: PipeHandle) -> Result<()> {
 }
 
 /// Disconnect (kick) the current client.
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub fn disconnect(server: PipeHandle) -> Result<()> {
     unsafe { check(DisconnectNamedPipe(server), "DisconnectNamedPipe") }
 }
@@ -215,6 +219,7 @@ pub fn connect_client(name: &str) -> Result<PipeHandle> {
 }
 
 /// Send a single envelope (length-prefixed JSON frame) over the pipe.
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub fn send(h: PipeHandle, env: &Envelope) -> Result<()> {
     let bytes = serde_json::to_vec(env).map_err(wt_core::Error::from)?;
     let len = (bytes.len() as u32).to_le_bytes();
@@ -246,6 +251,7 @@ pub fn send(h: PipeHandle, env: &Envelope) -> Result<()> {
 }
 
 /// Receive a single envelope (length-prefixed JSON frame) from the pipe.
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub fn recv(h: PipeHandle) -> Result<Envelope> {
     let mut len_buf = [0u8; 4];
     let mut read: u32 = 0;
@@ -275,10 +281,11 @@ pub fn recv(h: PipeHandle) -> Result<Envelope> {
                 "ReadFile short payload: {read} of {len}"
             )));
         }
-        Ok(serde_json::from_slice(&buf).map_err(wt_core::Error::from)?)
+        serde_json::from_slice(&buf).map_err(wt_core::Error::from)
     }
 }
 
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub fn close(h: PipeHandle) {
     if !h.is_null() && h != INVALID_HANDLE_VALUE {
         unsafe { CloseHandle(h) };

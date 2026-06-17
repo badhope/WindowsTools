@@ -37,6 +37,7 @@ struct EnumServiceStatusProcessW {
 
 #[repr(C)]
 #[derive(Default, Clone, Copy)]
+#[allow(non_snake_case)]
 struct ServiceStatusProcess {
     dw_service_type: u32,
     dw_current_state: u32,
@@ -155,6 +156,7 @@ const SERVICE_PAUSE_CONTINUE: u32 = 0x0040;
 const SERVICE_CHANGE_CONFIG: u32 = 0x0002;
 const SERVICE_QUERY_STATUS_CFG: u32 = 0x0008;
 const SERVICE_CONFIG_DESCRIPTION: u32 = 1;
+#[allow(dead_code)]
 const SERVICE_CONFIG_START_TYPE: u32 = 0;
 const SERVICE_NO_CHANGE: u32 = 0xFFFFFFFF;
 const SERVICE_BOOT_START: u32 = 0;
@@ -165,6 +167,7 @@ const SERVICE_DISABLED: u32 = 4;
 const SERVICE_WIN32: u32 = 0x00000030;
 const SERVICE_DRIVER: u32 = 0x0000000B;
 const SERVICE_ACTIVE: u32 = 0x00000002;
+#[allow(dead_code)]
 const SERVICE_INACTIVE: u32 = 0x00000003;
 const SC_ENUM_PROCESS_INFO: u32 = 0;
 const SERVICE_CONTROL_STOP: u32 = 1;
@@ -478,6 +481,7 @@ fn wide_null(s: &str) -> Vec<u16> {
     s.encode_utf16().chain(std::iter::once(0)).collect()
 }
 
+#[allow(dead_code)]
 fn read_wide(buf: &[u16]) -> String {
     let len = buf.iter().position(|&c| c == 0).unwrap_or(buf.len());
     String::from_utf16_lossy(&buf[..len])
